@@ -3,410 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOU.MO | The Traveler</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Manrope:wght@300;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <title>Interstellar Event Horizon</title>
     <style>
-        :root {
-            --bg: #0b0b0b;
-            --gold: #D4AF37; /* The "St. Christopher" medal color */
-            --red: #8a0000;   /* The "Red Cord" color */
-            --text-muted: rgba(255, 255, 255, 0.6);
-            --glass: rgba(20, 20, 20, 0.8);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background-color: var(--bg);
-            color: white;
-            font-family: 'Manrope', sans-serif;
-            overflow: hidden; /* App-like feel */
-            height: 100vh;
-        }
-
-        /* --- BACKGROUND LAYERS --- */
-        #gl {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            z-index: 0;
-        }
-
-        .vignette {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 20%, #000 120%);
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* --- UI LAYER --- */
-        main {
-            position: relative;
-            z-index: 10;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 40px;
-        }
-
-        /* HEADER */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 20px;
-        }
-
-        .brand {
-            font-family: 'Cinzel', serif;
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            color: var(--gold);
-        }
-
-        .date {
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        /* CENTER CONTENT */
-        .stage {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5vw;
-        }
-
-        /* The Image Card (Left) */
-        .card-frame {
-            width: 300px;
-            height: 420px;
-            position: relative;
-            perspective: 1000px;
-        }
-
-        .card-inner {
-            width: 100%; height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .card-frame:hover .card-inner {
-            transform: rotateY(10deg) rotateX(5deg);
-        }
-
-        .card-img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            filter: grayscale(100%) contrast(120%);
-            transition: filter 0.5s;
-        }
-        
-        .card-frame:hover .card-img {
-            filter: grayscale(0%) contrast(110%);
-        }
-
-        .glitch-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(transparent 50%, rgba(0,0,0,0.5) 50%);
-            background-size: 100% 4px;
-            pointer-events: none;
-            opacity: 0.3;
-        }
-
-        /* The Text Data (Right) */
-        .data-panel {
-            max-width: 500px;
-            text-align: left;
-        }
-
-        h1 {
-            font-family: 'Cinzel', serif;
-            font-size: 4rem;
-            line-height: 1;
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px rgba(255,255,255,0.1);
-        }
-
-        .sub-header {
-            color: var(--gold);
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            font-size: 0.9rem;
-            margin-bottom: 30px;
-            display: block;
-        }
-
-        .desc {
-            color: var(--text-muted);
-            line-height: 1.6;
-            margin-bottom: 30px;
-            font-size: 1rem;
-            border-left: 2px solid var(--gold);
-            padding-left: 20px;
-        }
-
-        /* LINKS / SOCIALS */
-        .links {
-            display: flex;
-            gap: 20px;
-        }
-
-        .btn {
-            text-decoration: none;
-            color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 10px 25px;
-            font-family: 'Cinzel', serif;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn:hover {
-            border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.1);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-        }
-
-        /* FOOTER / TIMELINE */
-        footer {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 50px;
-        }
-
-        .cycle-node {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-family: 'Cinzel', serif;
-            cursor: pointer;
-            font-size: 0.9rem;
-            position: relative;
-            padding: 5px 10px;
-            transition: color 0.3s;
-        }
-
-        .cycle-node::after {
-            content: '';
-            position: absolute;
-            bottom: -5px; left: 0; width: 0%; height: 2px;
-            background: var(--gold);
-            transition: width 0.3s;
-        }
-
-        .cycle-node.active {
-            color: white;
-            text-shadow: 0 0 10px white;
-        }
-        
-        .cycle-node.active::after {
-            width: 100%;
-        }
-
-        /* MOBILE RESPONSIVE */
-        @media (max-width: 768px) {
-            .stage { flex-direction: column; text-align: center; }
-            .data-panel { text-align: center; }
-            .desc { border-left: none; border-top: 2px solid var(--gold); padding-top: 20px; padding-left: 0; }
-            h1 { font-size: 2.5rem; }
-            .card-frame { width: 250px; height: 350px; }
-            .links { justify-content: center; }
-        }
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        canvas { display: block; width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
-    <canvas id="gl"></canvas>
-    <div class="vignette"></div>
-
-    <main>
-        <header>
-            <div class="brand">SIC MUNDUS</div>
-            <div class="date" id="clock">12:00:00</div>
-        </header>
-
-        <div class="stage">
-            <div class="card-frame">
-                <div class="card-inner">
-                    <img src="image_96496c.jpg" class="card-img" id="main-visual" alt="The Traveler">
-                    <div class="glitch-overlay"></div>
-                </div>
-            </div>
-
-            <div class="data-panel">
-                <span class="sub-header" id="cycle-label">The Origin</span>
-                <h1 id="main-title">SOUMODITYA</h1>
-                <p class="desc" id="main-desc">
-                    A polymath from Rampurhat, standing at the intersection of ancient lineage and digital future. 
-                    9th-generation descendant of the historic Pramanik family.
-                </p>
-
-                <div class="links" id="link-container">
-                    <a href="https://twitter.com/soumodityax" target="_blank" class="btn"><i class="fa-brands fa-x-twitter"></i> CONNECT</a>
-                    <a href="https://github.com/soumoditya" target="_blank" class="btn"><i class="fa-brands fa-github"></i> CODE</a>
-                </div>
-            </div>
-        </div>
-
-        <footer>
-            <button class="cycle-node active" onclick="setCycle(0)">1900s: LINEAGE</button>
-            <button class="cycle-node" onclick="setCycle(1)">2026: THE WORK</button>
-            <button class="cycle-node" onclick="setCycle(2)">3333: FUTURE</button>
-        </footer>
-    </main>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
-    <script>
-        // --- DATA CYCLES ---
-        const cycles = [
-            {
-                label: "The Lineage",
-                title: "SOUMODITYA",
-                desc: "Carrying the torch of the Pramanik family. From Narayan Chandra to the digital age. Bridging the gap between the merchant Gurudas Pramanik and the era of Artificial Intelligence.",
-                img: "image_96496c.jpg", // The Portrait
-                links: [
-                    { icon: "fa-brands fa-x-twitter", text: "IDENTITY", url: "https://twitter.com/soumodityax" }
-                ]
-            },
-            {
-                label: "The Work",
-                title: "VEDIC CODE",
-                desc: "Author of 'Shankaracharya Message'. Exploring Advaita Vedanta through the lens of a Full-Stack Developer. Merging the consciousness of the past with the logic of the machine.",
-                img: "image_964964.jpg", // The Hoodie/Desk Setup
-                links: [
-                    { icon: "fa-solid fa-book-open", text: "READ BOOK", url: "#" },
-                    { icon: "fa-brands fa-github", text: "VIEW CODE", url: "https://github.com/soumoditya" }
-                ]
-            },
-            {
-                label: "The Network",
-                title: "CONSTELLATION",
-                desc: "A verified voice in the digital ether. Located in Rampurhat, broadcasting to the globe. Building the 'Dark Matter' of the next web.",
-                img: "image_96496c.jpg", // Portrait again or different one
-                links: [
-                    { icon: "fa-brands fa-instagram", text: "VISUALS", url: "https://instagram.com/soumodityax" },
-                    { icon: "fa-solid fa-envelope", text: "CONTACT", url: "mailto:contact@soumodityapramanik.in" }
-                ]
-            }
-        ];
-
-        // --- UPDATE CONTENT FUNCTION ---
-        function setCycle(index) {
-            // Update Active Button
-            document.querySelectorAll('.cycle-node').forEach((btn, i) => {
-                btn.classList.toggle('active', i === index);
-            });
-
-            // Glitch Animation for Text
-            const title = document.getElementById('main-title');
-            const desc = document.getElementById('main-desc');
-            const img = document.getElementById('main-visual');
-            const label = document.getElementById('cycle-label');
-            const links = document.getElementById('link-container');
-
-            gsap.to([title, desc, img, label], { opacity: 0, duration: 0.2, onComplete: () => {
-                // Update Content
-                title.innerText = cycles[index].title;
-                desc.innerText = cycles[index].desc;
-                label.innerText = cycles[index].label;
-                img.src = cycles[index].img;
-
-                // Update Links
-                links.innerHTML = cycles[index].links.map(link => 
-                    `<a href="${link.url}" target="_blank" class="btn"><i class="${link.icon}"></i> ${link.text}</a>`
-                ).join('');
-
-                gsap.to([title, desc, img, label], { opacity: 1, duration: 0.5 });
-            }});
-        }
-
-        // --- THREE.JS BACKGROUND (The "God Particle" Effect) ---
+        // --- Configuration ---
+        const BLACK_HOLE_RADIUS = 0.5;      // Size of the Event Horizon
+        const DISK_INNER = 1.2;             // Inner edge of accretion disk
+        const DISK_OUTER = 4.5;             // Outer edge of accretion disk
+        
+        // --- Setup Scene ---
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), alpha: true });
-        
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        
-        // Particles
-        const geometry = new THREE.BufferGeometry();
-        const count = 3000;
-        const posArray = new Float32Array(count * 3);
+        document.body.appendChild(renderer.domElement);
 
-        for(let i = 0; i < count * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 15;
-        }
+        // --- Shader Code ---
+        const fragmentShader = `
+            uniform float iTime;
+            uniform vec2 iResolution;
+            uniform vec2 iMouse;
 
-        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const material = new THREE.PointsMaterial({
-            size: 0.005,
-            color: 0xD4AF37, // Gold Dust
-            transparent: true,
-            opacity: 0.6
+            // 3D Noise Function for the accretion disk texture
+            float hash(float n) { return fract(sin(n) * 43758.5453123); }
+            float noise(vec3 x) {
+                vec3 p = floor(x);
+                vec3 f = fract(x);
+                f = f * f * (3.0 - 2.0 * f);
+                float n = p.x + p.y * 57.0 + 113.0 * p.z;
+                return mix(mix(mix(hash(n + 0.0), hash(n + 1.0), f.x),
+                               mix(hash(n + 57.0), hash(n + 58.0), f.x), f.y),
+                           mix(mix(hash(n + 113.0), hash(n + 114.0), f.x),
+                               mix(hash(n + 170.0), hash(n + 171.0), f.x), f.y), f.z);
+            }
+
+            // Rotational matrix
+            mat3 rotateY(float angle) {
+                float c = cos(angle);
+                float s = sin(angle);
+                return mat3(c, 0, -s, 0, 1, 0, s, 0, c);
+            }
+
+            mat3 rotateX(float angle) {
+                float c = cos(angle);
+                float s = sin(angle);
+                return mat3(1, 0, 0, 0, c, -s, 0, s, c);
+            }
+
+            void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+                // Normalize coordinates
+                vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+                
+                // Camera setup (Mouse controls view angle)
+                vec3 ro = vec3(0.0, 0.0, -8.0); // Ray Origin
+                vec3 rd = normalize(vec3(uv, 1.5)); // Ray Direction
+                
+                // Mouse rotation
+                float rotX = (iMouse.y / iResolution.y - 0.5) * 3.0;
+                float rotY = (iMouse.x / iResolution.x - 0.5) * 6.0;
+                mat3 viewMat = rotateY(rotY + 0.5) * rotateX(rotX + 0.2); // +offsets for initial nice angle
+                ro = viewMat * ro;
+                rd = viewMat * rd;
+
+                vec3 col = vec3(0.0);
+                
+                // --- Raymarching / Gravitational Lensing Physics ---
+                
+                float bhRadius = ${BLACK_HOLE_RADIUS};
+                float diskInner = ${DISK_INNER};
+                float diskOuter = ${DISK_OUTER};
+                
+                vec3 p = ro;
+                float dist = 0.0;
+                float totDist = 0.0;
+                
+                // Accumulate glow
+                vec3 glow = vec3(0.0);
+                
+                // Step size for raymarching
+                for(int i = 0; i < 150; i++) {
+                    float r = length(p); // Distance from black hole center (0,0,0)
+                    
+                    // Event Horizon check
+                    if(r < bhRadius) {
+                        col = vec3(0.0); // Absolute black
+                        break; 
+                    }
+                    
+                    // Gravity bending (Simplified approximation of General Relativity)
+                    // Light bends towards the mass (0,0,0)
+                    vec3 gravity = -normalize(p) * (0.08 / (r * r)); 
+                    rd += gravity * 0.1; // Apply bending
+                    rd = normalize(rd);
+                    
+                    p += rd * 0.15; // Move ray forward
+                    totDist += 0.15;
+                    
+                    if(totDist > 20.0) break; // Too far away
+                    
+                    // --- Accretion Disk Rendering ---
+                    // Check if we are near the disk plane (y ~= 0) and within radius
+                    float diskH = 0.1; // Disk thickness
+                    
+                    // Smooth distance to disk plane
+                    float distToPlane = abs(p.y);
+                    
+                    if(distToPlane < diskH && r > diskInner && r < diskOuter) {
+                        // Calculate disk coordinates for texture
+                        float angle = atan(p.z, p.x);
+                        float speed = 2.0 / r; // Inner parts move faster
+                        
+                        // Noise texture
+                        float noiseVal = noise(vec3(p.x * 3.0, p.z * 3.0, iTime * speed + angle * 2.0));
+                        noiseVal += noise(vec3(p.x * 10.0, p.z * 10.0, iTime * speed * 2.0));
+                        
+                        // Intensity gradient (brighter inner, darker outer)
+                        float intensity = exp(-(r - diskInner) * 2.0);
+                        
+                        // Doppler shift simulation (redshift/blueshift based on rotation)
+                        // Simple dot product of view dir and tangent
+                        vec3 tangent = normalize(cross(vec3(0,1,0), p));
+                        float doppler = dot(rd, tangent);
+                        vec3 diskCol = vec3(1.0, 0.6, 0.2); // Base orange
+                        
+                        // Apply Doppler: Blue on approach (left), Red on recede (right)
+                        diskCol = mix(diskCol, vec3(0.5, 0.8, 1.0), clamp(doppler * 0.5, 0.0, 1.0)); // Blue shift
+                        diskCol *= (1.0 - abs(doppler) * 0.3); // Dimming
+
+                        // Accumulate color (Volumetric addition)
+                        float alpha = (1.0 - smoothstep(0.0, diskH, distToPlane)) * 0.15;
+                        glow += diskCol * noiseVal * intensity * alpha * 5.0;
+                    }
+                }
+                
+                // Add starfield background if ray didn't hit black hole
+                if (length(col) == 0.0 && length(glow) < 1.0) {
+                     float stars = pow(hash(dot(rd, vec3(12.9898, 78.233, 45.5432))), 100.0) * 1.5;
+                     col += vec3(stars);
+                }
+
+                fragColor = vec4(col + glow, 1.0);
+            }
+
+            void main() {
+                mainImage(gl_FragColor, gl_FragCoord.xy);
+            }
+        `;
+
+        const vertexShader = `
+            void main() {
+                gl_Position = vec4(position, 1.0);
+            }
+        `;
+
+        // --- Init Three.js Material ---
+        const material = new THREE.ShaderMaterial({
+            fragmentShader,
+            vertexShader,
+            uniforms: {
+                iTime: { value: 0 },
+                iResolution: { value: new THREE.Vector2() },
+                iMouse: { value: new THREE.Vector2() }
+            }
         });
 
-        const sphere = new THREE.Points(geometry, material);
-        scene.add(sphere);
-        camera.position.z = 2;
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+        scene.add(plane);
 
-        // Animation
-        let mouseX = 0;
-        let mouseY = 0;
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX / window.innerWidth - 0.5;
-            mouseY = e.clientY / window.innerHeight - 0.5;
-        });
-
-        const clock = new THREE.Clock();
-
-        function animate() {
-            const time = clock.getElapsedTime();
-            sphere.rotation.y = time * 0.05;
-            sphere.rotation.x += (mouseY * 0.1 - sphere.rotation.x) * 0.05;
-            sphere.rotation.y += (mouseX * 0.1 - sphere.rotation.y) * 0.05;
-
-            // Breathing effect
-            sphere.scale.x = 1 + Math.sin(time * 0.5) * 0.05;
-            sphere.scale.y = 1 + Math.sin(time * 0.5) * 0.05;
-
-            renderer.render(scene, camera);
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // Clock Update
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString();
-        }, 1000);
-
-        // Resize Handler
+        // --- Event Listeners ---
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            material.uniforms.iResolution.value.set(window.innerWidth, window.innerHeight);
         });
+
+        // Initial set
+        material.uniforms.iResolution.value.set(window.innerWidth, window.innerHeight);
+        
+        // Mouse tracking
+        document.addEventListener('mousemove', (e) => {
+            material.uniforms.iMouse.value.x = e.clientX;
+            material.uniforms.iMouse.value.y = window.innerHeight - e.clientY;
+        });
+
+        // --- Animation Loop ---
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            material.uniforms.iTime.value = clock.getElapsedTime();
+            renderer.render(scene, camera);
+        }
+        
+        animate();
     </script>
 </body>
 </html>
