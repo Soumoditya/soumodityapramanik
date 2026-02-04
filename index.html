@@ -3,52 +3,410 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOU.MO | The Portfolio</title>
-    <link rel="stylesheet" href="style.css">
+    <title>SOU.MO | The Traveler</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Manrope:wght@300;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg: #0b0b0b;
+            --gold: #D4AF37; /* The "St. Christopher" medal color */
+            --red: #8a0000;   /* The "Red Cord" color */
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --glass: rgba(20, 20, 20, 0.8);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Manrope', sans-serif;
+            overflow: hidden; /* App-like feel */
+            height: 100vh;
+        }
+
+        /* --- BACKGROUND LAYERS --- */
+        #gl {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 20%, #000 120%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- UI LAYER --- */
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 20px;
+        }
+
+        .brand {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: var(--gold);
+        }
+
+        .date {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* CENTER CONTENT */
+        .stage {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5vw;
+        }
+
+        /* The Image Card (Left) */
+        .card-frame {
+            width: 300px;
+            height: 420px;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            width: 100%; height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card-frame:hover .card-inner {
+            transform: rotateY(10deg) rotateX(5deg);
+        }
+
+        .card-img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(120%);
+            transition: filter 0.5s;
+        }
+        
+        .card-frame:hover .card-img {
+            filter: grayscale(0%) contrast(110%);
+        }
+
+        .glitch-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(transparent 50%, rgba(0,0,0,0.5) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* The Text Data (Right) */
+        .data-panel {
+            max-width: 500px;
+            text-align: left;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 4rem;
+            line-height: 1;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        .sub-header {
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            display: block;
+        }
+
+        .desc {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-size: 1rem;
+            border-left: 2px solid var(--gold);
+            padding-left: 20px;
+        }
+
+        /* LINKS / SOCIALS */
+        .links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            text-decoration: none;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 25px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        /* FOOTER / TIMELINE */
+        footer {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+        }
+
+        .cycle-node {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            font-size: 0.9rem;
+            position: relative;
+            padding: 5px 10px;
+            transition: color 0.3s;
+        }
+
+        .cycle-node::after {
+            content: '';
+            position: absolute;
+            bottom: -5px; left: 0; width: 0%; height: 2px;
+            background: var(--gold);
+            transition: width 0.3s;
+        }
+
+        .cycle-node.active {
+            color: white;
+            text-shadow: 0 0 10px white;
+        }
+        
+        .cycle-node.active::after {
+            width: 100%;
+        }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+            .stage { flex-direction: column; text-align: center; }
+            .data-panel { text-align: center; }
+            .desc { border-left: none; border-top: 2px solid var(--gold); padding-top: 20px; padding-left: 0; }
+            h1 { font-size: 2.5rem; }
+            .card-frame { width: 250px; height: 350px; }
+            .links { justify-content: center; }
+        }
+    </style>
 </head>
 <body>
 
-    <div id="gl"></div>
+    <canvas id="gl"></canvas>
+    <div class="vignette"></div>
 
-    <main data-scroll-container>
-        
-        <section class="hero">
-            <div class="hero-text">
-                <h1 data-scroll data-scroll-speed="1">SOU</h1>
-                <h1 data-scroll data-scroll-speed="2" class="outline">MODITYA</h1>
-            </div>
-            <p class="hero-sub">Creative Developer & Visionary</p>
-        </section>
+    <main>
+        <header>
+            <div class="brand">SIC MUNDUS</div>
+            <div class="date" id="clock">12:00:00</div>
+        </header>
 
-        <section class="gallery">
-            <div class="gallery-wrapper">
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" alt="Abstract 1">
-                    <div class="text-overlay"><h2>CREATE</h2></div>
-                </div>
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2670&auto=format&fit=crop" alt="Abstract 2">
-                    <div class="text-overlay"><h2>DISRUPT</h2></div>
-                </div>
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?q=80&w=2564&auto=format&fit=crop" alt="Abstract 3">
-                    <div class="text-overlay"><h2>ELEVATE</h2></div>
+        <div class="stage">
+            <div class="card-frame">
+                <div class="card-inner">
+                    <img src="image_96496c.jpg" class="card-img" id="main-visual" alt="The Traveler">
+                    <div class="glitch-overlay"></div>
                 </div>
             </div>
-        </section>
 
-        <section class="footer">
-            <h2>LET'S TALK</h2>
-            <div class="email">contact@soumodityapramanik.in</div>
-        </section>
+            <div class="data-panel">
+                <span class="sub-header" id="cycle-label">The Origin</span>
+                <h1 id="main-title">SOUMODITYA</h1>
+                <p class="desc" id="main-desc">
+                    A polymath from Rampurhat, standing at the intersection of ancient lineage and digital future. 
+                    9th-generation descendant of the historic Pramanik family.
+                </p>
 
+                <div class="links" id="link-container">
+                    <a href="https://twitter.com/soumodityax" target="_blank" class="btn"><i class="fa-brands fa-x-twitter"></i> CONNECT</a>
+                    <a href="https://github.com/soumoditya" target="_blank" class="btn"><i class="fa-brands fa-github"></i> CODE</a>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <button class="cycle-node active" onclick="setCycle(0)">1900s: LINEAGE</button>
+            <button class="cycle-node" onclick="setCycle(1)">2026: THE WORK</button>
+            <button class="cycle-node" onclick="setCycle(2)">3333: FUTURE</button>
+        </footer>
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
-    <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
-    
-    <script type="module" src="app.js"></script>
+
+    <script>
+        // --- DATA CYCLES ---
+        const cycles = [
+            {
+                label: "The Lineage",
+                title: "SOUMODITYA",
+                desc: "Carrying the torch of the Pramanik family. From Narayan Chandra to the digital age. Bridging the gap between the merchant Gurudas Pramanik and the era of Artificial Intelligence.",
+                img: "image_96496c.jpg", // The Portrait
+                links: [
+                    { icon: "fa-brands fa-x-twitter", text: "IDENTITY", url: "https://twitter.com/soumodityax" }
+                ]
+            },
+            {
+                label: "The Work",
+                title: "VEDIC CODE",
+                desc: "Author of 'Shankaracharya Message'. Exploring Advaita Vedanta through the lens of a Full-Stack Developer. Merging the consciousness of the past with the logic of the machine.",
+                img: "image_964964.jpg", // The Hoodie/Desk Setup
+                links: [
+                    { icon: "fa-solid fa-book-open", text: "READ BOOK", url: "#" },
+                    { icon: "fa-brands fa-github", text: "VIEW CODE", url: "https://github.com/soumoditya" }
+                ]
+            },
+            {
+                label: "The Network",
+                title: "CONSTELLATION",
+                desc: "A verified voice in the digital ether. Located in Rampurhat, broadcasting to the globe. Building the 'Dark Matter' of the next web.",
+                img: "image_96496c.jpg", // Portrait again or different one
+                links: [
+                    { icon: "fa-brands fa-instagram", text: "VISUALS", url: "https://instagram.com/soumodityax" },
+                    { icon: "fa-solid fa-envelope", text: "CONTACT", url: "mailto:contact@soumodityapramanik.in" }
+                ]
+            }
+        ];
+
+        // --- UPDATE CONTENT FUNCTION ---
+        function setCycle(index) {
+            // Update Active Button
+            document.querySelectorAll('.cycle-node').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+
+            // Glitch Animation for Text
+            const title = document.getElementById('main-title');
+            const desc = document.getElementById('main-desc');
+            const img = document.getElementById('main-visual');
+            const label = document.getElementById('cycle-label');
+            const links = document.getElementById('link-container');
+
+            gsap.to([title, desc, img, label], { opacity: 0, duration: 0.2, onComplete: () => {
+                // Update Content
+                title.innerText = cycles[index].title;
+                desc.innerText = cycles[index].desc;
+                label.innerText = cycles[index].label;
+                img.src = cycles[index].img;
+
+                // Update Links
+                links.innerHTML = cycles[index].links.map(link => 
+                    `<a href="${link.url}" target="_blank" class="btn"><i class="${link.icon}"></i> ${link.text}</a>`
+                ).join('');
+
+                gsap.to([title, desc, img, label], { opacity: 1, duration: 0.5 });
+            }});
+        }
+
+        // --- THREE.JS BACKGROUND (The "God Particle" Effect) ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), alpha: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        // Particles
+        const geometry = new THREE.BufferGeometry();
+        const count = 3000;
+        const posArray = new Float32Array(count * 3);
+
+        for(let i = 0; i < count * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 15;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const material = new THREE.PointsMaterial({
+            size: 0.005,
+            color: 0xD4AF37, // Gold Dust
+            transparent: true,
+            opacity: 0.6
+        });
+
+        const sphere = new THREE.Points(geometry, material);
+        scene.add(sphere);
+        camera.position.z = 2;
+
+        // Animation
+        let mouseX = 0;
+        let mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX / window.innerWidth - 0.5;
+            mouseY = e.clientY / window.innerHeight - 0.5;
+        });
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            const time = clock.getElapsedTime();
+            sphere.rotation.y = time * 0.05;
+            sphere.rotation.x += (mouseY * 0.1 - sphere.rotation.x) * 0.05;
+            sphere.rotation.y += (mouseX * 0.1 - sphere.rotation.y) * 0.05;
+
+            // Breathing effect
+            sphere.scale.x = 1 + Math.sin(time * 0.5) * 0.05;
+            sphere.scale.y = 1 + Math.sin(time * 0.5) * 0.05;
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Clock Update
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString();
+        }, 1000);
+
+        // Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>
