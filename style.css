@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;500&display=swap');
+
+:root {
+    --bg: #050505;
+    --text: #ffffff;
+    --gold: #cfb56e;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    overflow-x: hidden; /* Hide scrollbar, Lenis handles it */
+}
+
+/* The Canvas sits behind everything */
+#gl {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Typography */
+h1 {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 15vw;
+    line-height: 0.8;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0;
+}
+
+.outline {
+    -webkit-text-stroke: 2px var(--text);
+    color: transparent;
+    opacity: 0.5;
+}
+
+/* Sections */
+section {
+    min-height: 100vh;
+    padding: 5vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.hero {
+    align-items: center;
+    text-align: center;
+    height: 100vh;
+}
+
+.hero-sub {
+    margin-top: 2rem;
+    font-size: 1.5rem;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+}
+
+/* Gallery Layout */
+.gallery {
+    padding: 10vw 0;
+}
+
+.gallery-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15vh;
+    align-items: center;
+}
+
+.gallery-item {
+    position: relative;
+    width: 60vw;
+    height: 80vh;
+    opacity: 0; /* Hidden initially, Three.js renders the image */
+}
+
+.gallery-item img {
+    display: none; /* We use the image as data for WebGL, not display */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.text-overlay {
+    position: absolute;
+    top: 50%; left: -10%;
+    transform: translateY(-50%);
+    font-family: 'Syncopate', sans-serif;
+    font-size: 5vw;
+    color: var(--gold);
+    mix-blend-mode: difference;
+    z-index: 2;
+}
+
+.footer {
+    text-align: center;
+    font-family: 'Syncopate', sans-serif;
+}
