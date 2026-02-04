@@ -1,1 +1,269 @@
-hello world
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soumoditya Pramanik | Visionary</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #050505;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+            height: 100vh;
+        }
+
+        /* The 3D Canvas Background */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0; /* Hidden initially for reveal */
+        }
+
+        /* UI Layer */
+        .content {
+            position: relative;
+            z-index: 2;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            pointer-events: none; /* Let clicks pass through to 3D background */
+        }
+
+        h1 {
+            font-size: 6rem;
+            line-height: 0.9;
+            font-weight: 700;
+            letter-spacing: -2px;
+            mix-blend-mode: exclusion;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+            transform: translateY(100px);
+            opacity: 0;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--gold);
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            opacity: 0;
+        }
+
+        /* Glass Cards for Interactivity */
+        .nav-dock {
+            position: fixed;
+            bottom: 50px;
+            display: flex;
+            gap: 20px;
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .icon-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .icon-btn:hover {
+            background: var(--gold);
+            color: black;
+            transform: translateY(-10px) scale(1.1);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Loader */
+        .loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--gold);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 3.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loader">INITIALIZING...</div>
+
+    <div id="canvas-container"></div>
+
+    <div class="content">
+        <div class="subtitle">Soumoditya Pramanik</div>
+        <h1>DIGITAL<br>ALCHEMY</h1>
+    </div>
+
+    <div class="nav-dock">
+        <a href="#" class="icon-btn"><i class="fa-brands fa-github"></i></a>
+        <a href="#" class="icon-btn"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="#" class="icon-btn"><i class="fa-solid fa-envelope"></i></a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+        // --- 1. SETUP THREE.JS (The 3D Engine) ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // --- 2. CREATE PARTICLES (The "Stars") ---
+        const geometry = new THREE.BufferGeometry();
+        const particlesCount = 2000; // Hardest Code: Managing thousands of points
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            // Spread particles across a wide area
+            posArray[i] = (Math.random() - 0.5) * 15; 
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        // Luxurious Material
+        const material = new THREE.PointsMaterial({
+            size: 0.005,
+            color: 0xD4AF37, // Gold
+            transparent: true,
+            opacity: 0.8,
+        });
+
+        const particlesMesh = new THREE.Points(geometry, material);
+        scene.add(particlesMesh);
+
+        // Mouse Interactivity
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        });
+
+        camera.position.z = 3;
+
+        // --- 3. ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            targetX = mouseX * 0.001;
+            targetY = mouseY * 0.001;
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // Rotate entire system slowly
+            particlesMesh.rotation.y = .1 * elapsedTime;
+            particlesMesh.rotation.x = -mouseY * (0.00005); // Subtle tilt on Y axis
+
+            // Smooth easing for mouse follow
+            particlesMesh.rotation.y += 0.05 * (targetX - particlesMesh.rotation.y);
+            
+            // "Breathing" effect
+            particlesMesh.position.z = Math.sin(elapsedTime * 0.5) * 0.2;
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // --- 4. EPIC REVEAL (GSAP) ---
+        // Wait for page to load, then animate
+        window.onload = () => {
+            const tl = gsap.timeline();
+
+            // Hide Loader
+            tl.to(".loader", {
+                duration: 1,
+                y: "-100%",
+                ease: "expo.inOut"
+            })
+            // Reveal 3D Background
+            .to("#canvas-container", {
+                duration: 2,
+                opacity: 1,
+                ease: "power2.out"
+            }, "-=0.5")
+            // Reveal Text with Stagger
+            .to("h1", {
+                duration: 1.5,
+                y: 0,
+                opacity: 1,
+                ease: "power4.out",
+                skewY: 0
+            }, "-=1.5")
+            .to(".subtitle", {
+                duration: 1,
+                opacity: 1,
+                y: 0,
+                ease: "power2.out"
+            }, "-=1")
+            // Float in the Dock
+            .to(".nav-dock", {
+                duration: 1,
+                y: 0,
+                opacity: 1,
+                ease: "back.out(1.7)"
+            }, "-=0.5");
+        }
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
