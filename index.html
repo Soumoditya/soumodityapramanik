@@ -3,657 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Vedic Chart Maker</title>
-    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
-    <style>
-        :root {
-            --bg-cream: #fff9f0; /* Matches the warm background of your image */
-            --line-gold: #eebb99; /* The soft orange/gold border color */
-            --text-blue: #2c3e50; /* Dark blue for planet text */
-            --text-num: #64748b; /* Muted blue/grey for Rashi numbers */
-            --accent-red: #e11d48; /* For special markers */
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #fdf6e3;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        /* Input Form Styling */
-        .controls {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #64748b;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        input {
-            padding: 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input:focus {
-            border-color: #f59e0b;
-        }
-
-        button {
-            grid-column: 1 / -1;
-            padding: 15px;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-        }
-
-        /* Charts Layout */
-        .charts-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 40px;
-            justify-content: center;
-        }
-
-        .chart-box {
-            flex: 1;
-            min-width: 350px;
-            max-width: 500px;
-            background: var(--bg-cream);
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            text-align: center;
-            position: relative;
-        }
-
-        h2 {
-            color: var(--text-blue);
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
-
-        /* SVG Styling */
-        svg {
-            width: 100%;
-            height: auto;
-            max-height: 500px;
-            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.05));
-        }
-
-        /* Chart Elements */
-        .house-poly {
-            fill: none;
-            stroke: var(--line-gold);
-            stroke-width: 2.5;
-            stroke-linejoin: round;
-        }
-        
-        /* Decorative corners from image */
-        .corner-decor {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            opacity: 0.6;
-        }
-        .top-left { top: 10px; left: 10px; border-top: 2px solid #eebb99; border-left: 2px solid #eebb99; border-radius: 8px 0 0 0; }
-        .bottom-right { bottom: 10px; right: 10px; border-bottom: 2px solid #eebb99; border-right: 2px solid #eebb99; border-radius: 0 0 8px 0; }
-
-        /* Typography inside SVG */
-        .rashi-num {
-            font-size: 12px;
-            fill: #60a5fa; /* Light blueish for signs numbers */
-            font-family: 'Verdana', sans-serif;
-        }
-        
-        .planet-text {
-            font-size: 13px;
-            fill: var(--text-blue);
-            font-weight: 700;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .deg-text {
-            font-size: 9px;
-            fill: #64748b;
-            font-weight: normal;
-        }
-        
-        .symbol-sup {
-            font-size: 9px;
-            font-weight: bold;
-        }
-
-        /* Legend */
-        .legend {
-            margin-top: 20px;
-            font-size: 0.8rem;
-            color: #666;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-        .legend span { display: flex; align-items: center; gap: 4px; }
-    </style>
+    <title>Soumoditya Pramanik | Visionary Developer & Author</title>
+    <meta name="description" content="Portfolio of Soumoditya Pramanik - Full Stack Developer, Author, and Creator.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&family=Space+Grotesk:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-
-<div class="container">
-    <div class="controls">
-        <div class="input-group">
-            <label>Name</label>
-            <input type="text" id="name" placeholder="Enter Name">
-        </div>
-        <div class="input-group">
-            <label>Date of Birth</label>
-            <input type="date" id="dob">
-        </div>
-        <div class="input-group">
-            <label>Time of Birth</label>
-            <input type="time" id="tob">
-        </div>
-        <div class="input-group">
-            <label>Latitude (Decimal)</label>
-            <input type="number" id="lat" placeholder="e.g. 28.6139" step="0.0001">
-        </div>
-        <div class="input-group">
-            <label>Longitude (Decimal)</label>
-            <input type="number" id="lon" placeholder="e.g. 77.2090" step="0.0001">
-        </div>
-        <button onclick="generateHoroscope()">Generate Chart</button>
-    </div>
-
-    <div class="charts-wrapper" id="results" style="opacity: 0.3; pointer-events: none;">
-        <div class="chart-box">
-            <div class="corner-decor top-left"></div>
-            <div class="corner-decor bottom-right"></div>
-            <h2>Lagna Chart (D1)</h2>
-            <svg viewBox="0 0 400 400" id="svgD1">
-                <defs>
-                    </defs>
-                <g id="d1_paths"></g>
-                <g id="d1_text"></g>
-            </svg>
-        </div>
-
-        <div class="chart-box">
-            <div class="corner-decor top-left"></div>
-            <div class="corner-decor bottom-right"></div>
-            <h2>Navamsa Chart (D9)</h2>
-            <svg viewBox="0 0 400 400" id="svgD9">
-                <g id="d9_paths"></g>
-                <g id="d9_text"></g>
-            </svg>
-        </div>
-    </div>
     
-    <div class="legend">
-        <span><b style="color:#2c3e50">*</b> Retrograde</span>
-        <span><b style="color:#2c3e50">Λ</b> Combust</span>
-        <span><b style="color:#2c3e50">↑</b> Exalted</span>
-    </div>
-</div>
+    <div class="cursor-dot" data-cursor-dot></div>
+    <div class="cursor-outline" data-cursor-outline></div>
 
-<script>
-    // --- Configuration & Constants ---
-    
-    // Symbols requested
-    const SYM_RETRO = "*";
-    const SYM_COMBUST = "Λ"; 
-    const SYM_EXALT = "↑";
-    const SYM_DEBIL = "↓";
+    <div class="noise"></div>
 
-    const PLANET_NAMES = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
-    const PLANET_SHORT = { "Sun": "Su", "Moon": "Mo", "Mars": "Ma", "Mercury": "Me", "Jupiter": "Ju", "Venus": "Ve", "Saturn": "Sa", "Rahu": "Ra", "Ketu": "Ke", "Ascendant": "As", "Uranus":"Ur", "Neptune":"Ne", "Pluto":"Pl" };
+    <nav class="navbar">
+        <a href="#" class="logo">SOUMODITYA<span class="highlight">.</span></a>
+        <div class="menu-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+        <ul class="nav-list">
+            <li><a href="#home" class="nav-link">Home</a></li>
+            <li><a href="#about" class="nav-link">Grokipedia</a></li>
+            <li><a href="#work" class="nav-link">Selected Work</a></li>
+            <li><a href="#connect" class="nav-link">Connect</a></li>
+        </ul>
+    </nav>
 
-    // Standard Combust Degrees (approximate Vedic standard)
-    const COMBUST_LIMITS = {
-        "Mars": 17, "Mercury": 14, "Jupiter": 11, "Venus": 10, "Saturn": 15
-    }; // Moon not usually combust in same way, but close to Sun is Amavasya.
-
-    // Exaltation Signs (1=Aries)
-    const EXALTATION = {
-        "Sun": 1, "Moon": 2, "Mars": 10, "Mercury": 6, "Jupiter": 4, "Venus": 12, "Saturn": 7, "Rahu": 2, "Ketu": 8
-    };
-
-    // --- Core Logic ---
-
-    function generateHoroscope() {
-        const dob = document.getElementById('dob').value;
-        const tob = document.getElementById('tob').value;
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
-
-        if (!dob || !tob || isNaN(lat) || isNaN(lon)) {
-            alert("Please fill all fields correctly.");
-            return;
-        }
-
-        // 1. Calculate Time & Ephemeris
-        const dateObj = new Date(`${dob}T${tob}:00`);
-        const time = Astronomy.MakeTime(dateObj); // Assumes system local time input, converts to UTC internally based on browser
+    <header id="home" class="hero">
+        <div class="hero-content">
+            <p class="hero-subtitle reveal-text">EST. 2004 // WEST BENGAL</p>
+            <h1 class="hero-title">
+                <span class="line reveal-text">ARCHITECT OF</span>
+                <span class="line reveal-text">DIGITAL <span class="gradient-text">REALITY</span></span>
+            </h1>
+            <p class="hero-bio reveal-text">
+                Full-Stack Developer & Author of <em>"Shankaracharya Message"</em>. 
+                Blending ancient heritage with futuristic code.
+            </p>
+            <div class="hero-cta reveal-text">
+                <a href="#work" class="btn-primary">Explore My Mind <i class="fa-solid fa-arrow-down-long"></i></a>
+            </div>
+        </div>
         
-        // Fix Timezone: The input is "Local Wall Time". We need to ensure Astronomy.js processes it as such.
-        // Actually Astronomy.MakeTime takes a JS Date. JS Date constructor with ISO string uses local time if no 'Z'. 
-        // So `new Date('2004-10-12T12:00:00')` is local. Correct.
+        <div class="hero-visual">
+            <div class="sphere"></div>
+        </div>
+    </header>
 
-        // 2. Ayanamsa Calculation (Lahiri)
-        // Astronomy.js is J2000. 
-        // Lahiri Ayanamsa for J2000 is approx 23.85 degrees.
-        // Rate: ~50.29 arcsec/year.
-        // Precise formula: Ayanamsa = 23.856447 + 0.01396 * (JulianYearsSince2000)
-        const daysSinceJ2000 = time.ut - 2451545.0;
-        const julianYears = daysSinceJ2000 / 365.25;
-        const ayanamsa = 23.856447 + (julianYears * 0.01396); 
-
-        // 3. Calculate Ascendant (Lagna)
-        // Calc RAMC and convert to Tropical Ascendant, then subtract Ayanamsa
-        const gmst = Astronomy.SiderealTime(time);
-        const lmst = (gmst + lon/15.0) % 24;
-        const ramc = lmst * 15;
-        const obliquity = Astronomy.Obliquity(time);
-        
-        // Math to get Ascendant
-        const rad = Math.PI / 180;
-        const ramcRad = ramc * rad;
-        const epsRad = obliquity * rad;
-        const latRad = lat * rad;
-        
-        // tan(asc) = -cos(RAMC) / (sin(eps)tan(lat) + cos(eps)sin(RAMC))
-        const num = -Math.cos(ramcRad);
-        const den = (Math.sin(epsRad) * Math.tan(latRad)) + (Math.cos(epsRad) * Math.sin(ramcRad));
-        let ascRad = Math.atan2(num, den);
-        let ascTropical = (ascRad * 180 / Math.PI);
-        if(ascTropical < 0) ascTropical += 360;
-        
-        const ascSidereal = normalize(ascTropical - ayanamsa);
-
-        // 4. Calculate Planets
-        let planets = [];
-        
-        // Add Ascendant first
-        planets.push({
-            name: "Ascendant",
-            long: ascSidereal,
-            speed: 1, // irrelevant
-            isRetro: false
-        });
-
-        // Sun to Saturn
-        const bodies = ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"];
-        
-        // Helper to get Planet Data
-        let sunLong = 0; // For combustion
-
-        bodies.forEach(bodyName => {
-            const body = Astronomy.Body[bodyName];
-            const pos = Astronomy.Ecliptic(body, time);
+    <section id="about" class="about-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="tag">01 // IDENTITY</span>
+                <h2 class="section-title">The <span class="highlight">Grokipedia</span> File</h2>
+            </div>
             
-            // Retrograde check (distance decreases -> retrograde? No, Astronomy.js gives velocity)
-            // Need velocity vector. 
-            // Astronomy.js doesn't give ecliptic velocity directly in simple Ecliptic() call? 
-            // Actually it returns heliocentric or geocentric coords.
-            // Let's compare position at T and T-1min to determine speed/retro.
-            const timePrev = time.AddDays(-1/1440); // 1 minute ago
-            const posPrev = Astronomy.Ecliptic(body, timePrev);
-            const speed = (pos.elon - posPrev.elon); // If negative (after unwrapping), it's retro
-            
-            // Handle wrap around 360 for speed calc
-            let diff = pos.elon - posPrev.elon;
-            if (diff > 180) diff -= 360;
-            if (diff < -180) diff += 360;
-            
-            const isRetro = diff < 0;
-            
-            let siderealLong = normalize(pos.elon - ayanamsa);
-            
-            if(bodyName === "Sun") sunLong = siderealLong;
+            <div class="about-grid">
+                <div class="about-card glass-panel">
+                    <h3><i class="fa-solid fa-fingerprint"></i> Origin</h3>
+                    <p>Born October 12, 2004. A 9th-generation descendant of the Pramanik family, hailing from Rampurhat, West Bengal. Carrying a legacy of tradition into the digital age.</p>
+                </div>
+                <div class="about-card glass-panel">
+                    <h3><i class="fa-solid fa-code"></i> The Stack</h3>
+                    <p>Mastering the web's core: HTML5, CSS3, JavaScript, React, and Node.js. Building high-performance, interactive experiences that defy standard layouts.</p>
+                </div>
+                <div class="about-card glass-panel">
+                    <h3><i class="fa-solid fa-book-open"></i> The Author</h3>
+                    <p>Published author of <em>"Shankaracharya Message: Guidance on Knowledge, Devotion, and Liberation."</em> Exploring the intersection of Vedic wisdom and modern consciousness.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-            planets.push({
-                name: bodyName,
-                long: siderealLong,
-                speed: diff,
-                isRetro: isRetro
-            });
-        });
+    <section id="work" class="work-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="tag">02 // CREATIONS</span>
+                <h2 class="section-title">Selected <span class="gradient-text">Works</span></h2>
+            </div>
 
-        // Nodes (Rahu/Ketu)
-        // Astronomy.js "MoonNode" is Mean North Node
-        const nodePos = Astronomy.Ecliptic(Astronomy.Body.MoonNode, time);
-        const rahuSidereal = normalize(nodePos.elon - ayanamsa);
-        const ketuSidereal = normalize(rahuSidereal + 180);
-        
-        planets.push({ name: "Rahu", long: rahuSidereal, isRetro: true }); // True node usually retro
-        planets.push({ name: "Ketu", long: ketuSidereal, isRetro: true });
+            <div class="project-gallery">
+                <div class="project-item">
+                    <div class="project-info">
+                        <h3>Vedic Astro Engine</h3>
+                        <p>A next-gen astrology calculation engine capable of generating D1 & D9 charts with precision.</p>
+                        <div class="tech-stack">
+                            <span>Algorithm</span><span>Web Dev</span><span>Astronomy</span>
+                        </div>
+                        <a href="#" class="project-link">View Prototype <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                    <div class="project-visual">
+                        <div class="visual-placeholder gradient-1"></div>
+                    </div>
+                </div>
 
-        // 5. Enhance Data (Combustion, Exaltation)
-        planets = planets.map(p => {
-            if (p.name === "Ascendant" || p.name === "Rahu" || p.name === "Ketu" || p.name === "Uranus" || p.name === "Neptune" || p.name === "Pluto") return p;
+                <div class="project-item">
+                    <div class="project-info">
+                        <h3>Shankaracharya Message</h3>
+                        <p>Official digital presence for the book. An immersive reading experience focusing on spiritual UI/UX.</p>
+                        <div class="tech-stack">
+                            <span>Publication</span><span>Design</span><span>Amazon KDP</span>
+                        </div>
+                        <a href="https://amazon.com" target="_blank" class="project-link">View on Amazon <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                    <div class="project-visual">
+                        <div class="visual-placeholder gradient-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-            // Combustion
-            let distToSun = Math.abs(p.long - sunLong);
-            if (distToSun > 180) distToSun = 360 - distToSun;
-            
-            let isCombust = false;
-            if (p.name !== "Sun" && p.name !== "Moon" && COMBUST_LIMITS[p.name]) {
-                if (distToSun <= COMBUST_LIMITS[p.name]) isCombust = true;
-            }
-
-            // Signs
-            const sign = Math.floor(p.long / 30) + 1;
-            
-            // Exaltation
-            let isExalt = false;
-            if (EXALTATION[p.name] === sign) isExalt = true;
-
-            return { ...p, isCombust, isExalt };
-        });
-
-        // 6. Draw Charts
-        drawNorthIndianChart("svgD1", planets, ascSidereal, "D1");
-        drawNorthIndianChart("svgD9", calculateD9(planets), calculateD9Asc(ascSidereal), "D9");
-        
-        // Reveal UI
-        document.getElementById('results').style.opacity = "1";
-        document.getElementById('results').style.pointerEvents = "all";
-    }
-
-    // --- Chart Calculation Helpers ---
-
-    function normalize(deg) {
-        let d = deg % 360;
-        if (d < 0) d += 360;
-        return d;
-    }
-
-    function calculateD9(d1Planets) {
-        // Navamsa Logic:
-        // Position in D9 = (Sign-1)*9 + (Deg/3deg20') + 1 ... this gives 1..108 Padas. 
-        // Simpler Logic:
-        // Identify Element of D1 Sign.
-        // Fire (1,5,9): Starts Aries.
-        // Earth (2,6,10): Starts Capricorn.
-        // Air (3,7,11): Starts Libra.
-        // Water (4,8,12): Starts Cancer.
-        
-        return d1Planets.map(p => {
-            const d1Sign = Math.floor(p.long / 30) + 1;
-            const d1DegInSign = p.long % 30;
-            const pada = Math.floor(d1DegInSign / 3.33333333333); // 0 to 8
-            
-            let d9SignStart = 0;
-            if ([1, 5, 9].includes(d1Sign)) d9SignStart = 1; // Aries
-            if ([2, 6, 10].includes(d1Sign)) d9SignStart = 10; // Capricorn
-            if ([3, 7, 11].includes(d1Sign)) d9SignStart = 7; // Libra
-            if ([4, 8, 12].includes(d1Sign)) d9SignStart = 4; // Cancer
-            
-            let d9Sign = normalizeSign(d9SignStart + pada);
-            
-            // Navamsa longitude is technically center of that sign, but for display we just need the sign.
-            // We set longitude to (Sign-1)*30 + 15 to place it in center of that D9 house visually.
-            return { ...p, long: (d9Sign - 1) * 30 + 15 };
-        });
-    }
-
-    function calculateD9Asc(ascLong) {
-        const d1Sign = Math.floor(ascLong / 30) + 1;
-        const d1DegInSign = ascLong % 30;
-        const pada = Math.floor(d1DegInSign / 3.33333333333);
-        
-        let d9SignStart = 0;
-        if ([1, 5, 9].includes(d1Sign)) d9SignStart = 1; 
-        if ([2, 6, 10].includes(d1Sign)) d9SignStart = 10;
-        if ([3, 7, 11].includes(d1Sign)) d9SignStart = 7;
-        if ([4, 8, 12].includes(d1Sign)) d9SignStart = 4;
-        
-        let d9Sign = normalizeSign(d9SignStart + pada);
-        return (d9Sign - 1) * 30 + 15;
-    }
-
-    function normalizeSign(s) {
-        let res = (s - 1) % 12 + 1;
-        return res;
-    }
-
-    // --- SVG Rendering Engine ---
-
-    function drawNorthIndianChart(svgId, planetList, ascLong, type) {
-        const svg = document.getElementById(svgId);
-        const pathsGroup = svg.querySelector(`g[id$="_paths"]`);
-        const textGroup = svg.querySelector(`g[id$="_text"]`);
-        
-        pathsGroup.innerHTML = "";
-        textGroup.innerHTML = "";
-
-        const W = 400;
-        const H = 400;
-        const GAP = 2; // Gap between triangles for that "separate" look in the image
-
-        // North Indian Layout Coordinates (Diamonds and Triangles)
-        // We define polygons. 
-        // H1: Top Diamond. H4: Bottom Diamond. H7: Right Diamond. H10: Left Diamond??
-        // Wait, North Indian standard:
-        // Top Diamond = House 1 (Lagna)
-        // Left Triangle (Top) = House 2
-        // Left Triangle (Bottom) = House 3
-        // Left Diamond = House 4 
-        // ... No.
-        // Standard:
-        // Center Top Diamond: House 1
-        // Top Left Triangle: House 2
-        // Left Triangle: House 3 -- No.
-        
-        // Correct Geometry:
-        // Square rotated 45deg inside a square?
-        // Let's define the 12 zones based on lines.
-        // H1: Top center diamond.
-        // H2: Top Left Triangle.
-        // H3: Top Left (Lower) Triangle? 
-        // Let's use coordinate logic.
-        // Center point: 200,200.
-        // Corners: TL(0,0), TR(400,0), BL(0,400), BR(400,400).
-        // Midpoints: Top(200,0), Left(0,200), Right(400,200), Bottom(200,400).
-        
-        // H1 (Lagna): Polygon(200,200 -> 200,0 -> 100,100 -> 300,100? No)
-        // H1 is the Top Diamond: Points (200,200), (100,100), (200,0), (300,100).
-        
-        const centers = {
-            1: {x: 200, y: 100}, // Top Diamond
-            2: {x: 100, y: 50},  // Top Left Triangle
-            3: {x: 50, y: 100},  // Left Top Triangle
-            4: {x: 100, y: 200}, // Left Diamond
-            5: {x: 50, y: 300},  // Left Bottom Triangle
-            6: {x: 100, y: 350}, // Bottom Left Triangle
-            7: {x: 200, y: 300}, // Bottom Diamond
-            8: {x: 300, y: 350}, // Bottom Right Triangle
-            9: {x: 350, y: 300}, // Right Bottom Triangle
-            10: {x: 300, y: 200},// Right Diamond
-            11: {x: 350, y: 100},// Right Top Triangle
-            12: {x: 300, y: 50}  // Top Right Triangle
-        };
-
-        // Define Polygons with Gap Logic
-        // We shrink coordinates slightly towards their centroid to create gaps.
-        
-        const rawPolys = {
-            1: [[200,200], [100,100], [200,0], [300,100]],
-            2: [[200,0], [100,100], [0,0]],
-            3: [[0,0], [100,100], [0,200]],
-            4: [[200,200], [100,100], [0,200], [100,300]],
-            5: [[0,200], [100,300], [0,400]],
-            6: [[0,400], [100,300], [200,400]],
-            7: [[200,200], [100,300], [200,400], [300,300]],
-            8: [[200,400], [300,300], [400,400]],
-            9: [[400,400], [300,300], [400,200]],
-            10: [[200,200], [300,300], [400,200], [300,100]],
-            11: [[400,200], [300,100], [400,0]],
-            12: [[400,0], [300,100], [200,0]]
-        };
-
-        // Draw House Shapes
-        for (let h = 1; h <= 12; h++) {
-            const points = rawPolys[h].map(p => p.join(",")).join(" ");
-            const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-            poly.setAttribute("points", points);
-            poly.setAttribute("class", "house-poly");
-            // To create the rounded/gap effect from image, we can use stroke-linejoin="round" and a thick stroke of background color, 
-            // then overlay a thinner stroke. 
-            // Or just use the SVG styles defined above.
-            pathsGroup.appendChild(poly);
-            
-            // Draw Rashi Number (Sign Number)
-            // Logic: House 1 = Ascendant Sign. House 2 = Asc Sign + 1, etc.
-            const ascSign = Math.floor(ascLong / 30) + 1;
-            const currentSign = normalizeSign(ascSign + (h - 1));
-            
-            // Calculate corner position for Number (roughly towards the center of the chart or specific corner)
-            // In North Indian images, numbers are usually in the corners of the diamonds/triangles.
-            const center = centers[h];
-            let numPos = {x: center.x, y: center.y};
-            
-            // Adjust number position based on house shape to fit in "corner"
-            if(h===1) numPos = {x: 200, y: 165}; // Bottom of top diamond
-            if(h===4) numPos = {x: 135, y: 200};
-            if(h===7) numPos = {x: 200, y: 235};
-            if(h===10) numPos = {x: 265, y: 200};
-            
-            // Triangles - push towards center vertex
-            if(h===2) numPos = {x: 190, y: 15};
-            if(h===3) numPos = {x: 15, y: 190};
-            if(h===12) numPos = {x: 210, y: 15};
-            if(h===11) numPos = {x: 385, y: 190};
-            
-            const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            txt.setAttribute("x", numPos.x);
-            txt.setAttribute("y", numPos.y);
-            txt.setAttribute("class", "rashi-num");
-            txt.setAttribute("text-anchor", "middle");
-            txt.setAttribute("dominant-baseline", "middle");
-            txt.textContent = currentSign;
-            textGroup.appendChild(txt);
-        }
-
-        // Place Planets
-        // We group planets by sign, then find which House that sign is in.
-        const planetsBySign = {};
-        for(let i=1; i<=12; i++) planetsBySign[i] = [];
-        
-        planetList.forEach(p => {
-            if(p.name === "Ascendant") return; // Ascendant defines H1, not placed inside
-            const sign = Math.floor(p.long / 30) + 1;
-            planetsBySign[sign].push(p);
-        });
-
-        const ascSign = Math.floor(ascLong / 30) + 1;
-
-        for(let sign=1; sign<=12; sign++) {
-            const houseNum = normalizeSign(sign - ascSign + 1); // 1-based House Index
-            const planetsInHouse = planetsBySign[sign];
-            
-            if(planetsInHouse.length > 0) {
-                const center = centers[houseNum];
+    <section id="connect" class="contact-section">
+        <div class="container">
+            <div class="contact-wrapper glass-panel">
+                <h2 class="contact-title">Let's Build the <br> <span class="gradient-text">Future</span></h2>
+                <p>Available for high-impact projects and collaborations.</p>
                 
-                // Spacing logic to prevent overlap
-                const count = planetsInHouse.length;
-                let yStart = center.y - ((count - 1) * 8); // vertical stack
-                
-                planetsInHouse.forEach((p, idx) => {
-                    // Construct Label: Deg + Symbol + Name + Status
-                    const deg = Math.floor(p.long % 30);
-                    const name = PLANET_SHORT[p.name];
-                    
-                    let suffix = "";
-                    if(p.isRetro) suffix += SYM_RETRO;
-                    if(p.isCombust) suffix += SYM_COMBUST;
-                    if(p.isExalt) suffix += SYM_EXALT;
-                    
-                    // Group element
-                    const pg = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                    
-                    // Degrees text
-                    const tDeg = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    tDeg.setAttribute("x", center.x - 12);
-                    tDeg.setAttribute("y", yStart + (idx * 16));
-                    tDeg.setAttribute("class", "deg-text");
-                    tDeg.setAttribute("text-anchor", "end");
-                    tDeg.textContent = `${deg}°`;
+                <div class="social-links">
+                    <a href="https://twitter.com/soumodityax" target="_blank" class="social-btn">
+                        <i class="fa-brands fa-x-twitter"></i> @soumodityax
+                    </a>
+                    <a href="https://linkedin.com" target="_blank" class="social-btn">
+                        <i class="fa-brands fa-linkedin-in"></i> LinkedIn
+                    </a>
+                    <a href="mailto:hello@soumodityapramanik.in" class="social-btn">
+                        <i class="fa-solid fa-envelope"></i> Email
+                    </a>
+                </div>
 
-                    // Planet Name
-                    const tName = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    tName.setAttribute("x", center.x - 8);
-                    tName.setAttribute("y", yStart + (idx * 16));
-                    tName.setAttribute("class", "planet-text");
-                    tName.setAttribute("text-anchor", "start");
-                    tName.textContent = name;
-                    
-                    // Suffix (Symbols)
-                    if(suffix) {
-                        const tSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                        tSpan.textContent = suffix;
-                        tSpan.setAttribute("class", "symbol-sup");
-                        tSpan.setAttribute("fill", "#e11d48"); // Red for special symbols
-                        tName.appendChild(tSpan);
-                    }
-                    
-                    pg.appendChild(tDeg);
-                    pg.appendChild(tName);
-                    textGroup.appendChild(pg);
-                });
-            }
-        }
-        
-        // Add AS label to House 1 center if needed, or just rely on H1 pos
-        const h1Center = centers[1];
-        const asText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        asText.setAttribute("x", h1Center.x);
-        asText.setAttribute("y", h1Center.y - 30); // Higher up in diamond
-        asText.setAttribute("class", "planet-text");
-        asText.setAttribute("text-anchor", "middle");
-        asText.setAttribute("fill", "#e11d48");
-        asText.textContent = `Asc ${Math.floor(ascLong%30)}°`;
-        textGroup.appendChild(asText);
-    }
-</script>
+                <div class="news-ticker">
+                    <div class="ticker-content">
+                        <span>BREAKING: NEW ASTROLOGY ALGORITHM IN DEVELOPMENT +++ SHANKARACHARYA MESSAGE TOP SELLER +++ OPEN FOR 2026 CONTRACTS +++</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2026 Soumoditya Pramanik. All Rights Reserved.</p>
+                <p class="location">Rampurhat, India <i class="fa-solid fa-location-dot"></i></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
-</html>
+    </html>
+    
