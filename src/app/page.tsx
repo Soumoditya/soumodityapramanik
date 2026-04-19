@@ -284,7 +284,7 @@ export default function Page() {
   return (
     <>
       {/* NOISE */}
-      <div className="noise" aria-hidden />
+      <div className="noise-overlay" aria-hidden />
       {/* PROGRESS */}
       <div className="prg"><div className="prf" /></div>
       {/* CURSOR */}
