@@ -4,9 +4,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Clash Display', 'sans-serif'],
-        body: ['Cabinet Grotesk', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        serif: ['Instrument Serif', 'Georgia', 'serif'],
+        sans: ['Geist', 'system-ui', 'sans-serif'],
+        mono: ['Geist Mono', 'monospace'],
       },
     },
   },
