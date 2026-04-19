@@ -1,0 +1,5 @@
+User-Agent: *
+Allow: /
+
+Host: https://soumodityapramanik.in
+Sitemap: https://soumodityapramanik.in/sitemap.xml
