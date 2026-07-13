@@ -13,7 +13,8 @@ export const metadata: Metadata = {
     'Soumoditya Pramanik','Web Developer West Bengal','React Developer India',
     'Next.js Developer','TypeScript Developer','Frontend Developer India',
     'AI Tools Developer','Full-Stack Developer','soumodityapramanik.in',
-    'Soumoditya developer','ResumeForge','Banana Chat',
+    'Soumoditya developer','NagrikNazar','ResumeForge','Sampark','Sadhak app',
+    'PassPredictor','Banana Chat','Vintly',
   ],
   authors: [{ name: NAME, url: SITE_URL }],
   creator: NAME, publisher: NAME,
@@ -55,8 +56,11 @@ const jsonLd = {
       nationality: { '@type': 'Country', name: 'India' },
       address: { '@type': 'PostalAddress', addressRegion: 'West Bengal', addressCountry: 'IN' },
       email: 'soumodityapramanik@gmail.com',
-      alumniOf: [{ '@type': 'CollegeOrUniversity', name: 'Brainware University' }],
-      knowsAbout: ['JavaScript','TypeScript','React','Next.js','Node.js','Tailwind CSS','Web Development','AI Tools'],
+      alumniOf: [
+        { '@type': 'CollegeOrUniversity', name: 'Brainware University' },
+        { '@type': 'HighSchool', name: 'Rampurhat Jitendralal Vidyabhaban' },
+      ],
+      knowsAbout: ['JavaScript','TypeScript','React','Next.js','Node.js','Tailwind CSS','Three.js','Web Development','AI Tools'],
       sameAs: ['https://www.linkedin.com/in/soumodityapramanik','https://github.com/Soumoditya','https://x.com/Soumodityax','https://www.instagram.com/soumodityapramanik','https://youtube.com/@soumodityapramanik'],
     },
     {
