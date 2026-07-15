@@ -3,14 +3,14 @@ import './globals.css'
 
 const SITE_URL = 'https://soumodityapramanik.in'
 const NAME = 'Soumoditya Pramanik'
-const DESCRIPTION = 'Developer & maker from West Bengal, India. I build web apps, AI tools and interactive interfaces with React, Next.js and TypeScript.'
+const DESCRIPTION = 'Developer & maker from India. I build web apps, AI tools and interactive interfaces with React, Next.js and TypeScript.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: `${NAME} — Developer & Maker`, template: `%s | ${NAME}` },
   description: DESCRIPTION,
   keywords: [
-    'Soumoditya Pramanik','Web Developer West Bengal','React Developer India',
+    'Soumoditya Pramanik','Web Developer India','React Developer India',
     'Next.js Developer','TypeScript Developer','Frontend Developer India',
     'AI Tools Developer','Full-Stack Developer','soumodityapramanik.in',
     'Soumoditya developer','NagrikNazar','ResumeForge','Sampark','Sadhak app',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   category: 'technology',
   other: {
     'geo.region': 'IN-WB',
-    'geo.placename': 'West Bengal, India',
+    'geo.placename': 'India',
   },
 }
 
@@ -54,7 +54,7 @@ const jsonLd = {
       jobTitle: 'Web Developer',
       description: DESCRIPTION,
       nationality: { '@type': 'Country', name: 'India' },
-      address: { '@type': 'PostalAddress', addressRegion: 'West Bengal', addressCountry: 'IN' },
+      address: { '@type': 'PostalAddress', addressCountry: 'IN' },
       email: 'soumodityapramanik@gmail.com',
       alumniOf: [
         { '@type': 'CollegeOrUniversity', name: 'Brainware University' },
