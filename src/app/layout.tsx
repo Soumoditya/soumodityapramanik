@@ -38,8 +38,12 @@ export const metadata: Metadata = {
   },
   alternates: { canonical: SITE_URL },
   category: 'technology',
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }, { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' }],
+    apple: [{ url: '/apple-touch-icon.png' }],
+  },
   other: {
-    'geo.region': 'IN-WB',
+    'geo.region': 'IN',
     'geo.placename': 'India',
   },
 }
