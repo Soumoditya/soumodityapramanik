@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @font-face{font-family:'Orbitron';font-style:normal;font-weight:900;font-display:swap;src:url('/orbitron.ttf') format('truetype')}
+@font-face{font-family:'Bungee Inline';font-style:normal;font-weight:400;font-display:block;src:url('/bungee.ttf') format('truetype')}
 
 :root{
   --bg:#020204; --ink:#F0ECE2; --dim:#9A958C; --muted:#63605a;
@@ -25,6 +26,9 @@ canvas{display:block}
 /* mute */
 #mute{position:fixed;right:16px;bottom:16px;z-index:24;width:38px;height:38px;border:1px solid rgba(240,236,226,.2);border-radius:50%;color:var(--dim);font-size:15px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .5s,color .2s,border-color .2s}
 #mute.show{opacity:.7}#mute:hover{opacity:1;color:#fff;border-color:var(--red)}
+#hd{position:fixed;right:16px;bottom:62px;z-index:24;height:38px;padding:0 12px;border:1px solid rgba(240,236,226,.2);border-radius:100px;color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.12em;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .5s,color .2s,border-color .2s}
+#hd.show{opacity:.7}#hd:hover{opacity:1;color:#fff;border-color:var(--red)}
+#hd.on{color:var(--amber);border-color:var(--amber);opacity:1}
 
 /* ---------- INTRO ---------- */
 #intro{position:fixed;inset:0;z-index:40;background:#000;overflow:hidden;transition:opacity .9s var(--e),visibility .9s}
@@ -66,13 +70,11 @@ canvas{display:block}
   58%{transform:translate(0,0)}
 }
 .fslabel{font-family:var(--mono);font-weight:700;font-size:clamp(18px,3vw,26px);letter-spacing:.42em;color:#EDE9DE;padding-left:.42em;margin-top:-4px}
-.mrtitle{position:relative;font-family:'Orbitron',var(--sans);font-weight:900;font-size:clamp(26px,6.6vw,54px);letter-spacing:0;text-transform:uppercase;color:var(--red);
-  text-shadow:0 0 1px #E50914,0 0 22px rgba(229,9,20,.55),2px 0 rgba(0,229,255,.35),-2px 0 rgba(255,0,60,.35);
-  -webkit-text-stroke:1px #7a060b;min-height:1.2em;text-align:center}
-.mrtitle::after{content:'';position:absolute;left:-3%;right:-3%;top:50%;height:.12em;background:#000;transform:translateY(-50%);pointer-events:none}
-.mrtitle:empty::after{display:none}
+.mrtitle{position:relative;font-family:'Bungee Inline',var(--sans);font-weight:400;font-size:clamp(30px,7.4vw,64px);line-height:1.02;letter-spacing:.01em;text-transform:uppercase;color:var(--red);
+  text-shadow:0 0 18px rgba(229,9,20,.5),0 0 46px rgba(229,9,20,.22);min-height:1.1em;text-align:center}
+.mrtitle span{display:block}
 .mrtitle.gl{animation:tgl .16s steps(2) infinite}
-@keyframes tgl{0%,100%{transform:translate(0,0)}50%{transform:translate(1px,-1px);text-shadow:0 0 1px #E50914,0 0 28px rgba(229,9,20,.65),3px 0 rgba(0,229,255,.6),-3px 0 rgba(255,0,60,.6)}}
+@keyframes tgl{0%,100%{transform:translate(0,0)}50%{transform:translate(1px,-1px);text-shadow:0 0 22px rgba(229,9,20,.7),2px 0 rgba(0,229,255,.45),-2px 0 rgba(255,0,60,.45)}}
 .tap{font-family:var(--mono);font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:#EDE9DE;border:1px solid var(--red);padding:14px 30px;border-radius:2px;opacity:0;pointer-events:none;transition:opacity .5s,background .3s,color .3s;animation:tp 1.8s ease-in-out infinite}
 .tap.show{opacity:1;pointer-events:auto}
 .tap:hover{background:var(--red);color:#000}
@@ -140,7 +142,7 @@ canvas{display:block}
 .folder-body a:hover{color:#fff;border-color:#fff}
 .filerow{display:grid;grid-template-columns:26px 150px 1fr;gap:14px;align-items:center;padding:12px 0;border-top:1px solid #17141a;font-family:var(--mono);font-size:13px}
 .filerow:last-child{border-bottom:1px solid #17141a}
-.filerow .ic{color:var(--red);display:flex}
+.filerow .ic{color:#EDE9DE;display:flex;opacity:.92}
 .filerow .ic svg{width:16px;height:16px;fill:currentColor}
 .filerow .k{color:#8a8580;letter-spacing:.04em}
 .filerow .v{color:#EDE9DE;overflow:hidden;text-overflow:ellipsis}
