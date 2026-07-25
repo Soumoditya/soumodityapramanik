@@ -50,8 +50,9 @@ export default function Page() {
       <canvas id="gl" />
       <div className="vig" />
       <div id="flash" />
-      <audio id="snd" src="/intro.mp3" loop preload="auto" />
+      <audio id="snd" src="/intro.mp3" preload="auto" />
       <button id="mute" aria-label="Toggle sound" />
+      <button id="hd" aria-label="Toggle high detail">HD</button>
 
       <div id="intro">
         <div className="scan" />
@@ -61,7 +62,7 @@ export default function Page() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="fsmask" id="fsmask" src="/fsociety.png" alt="fsociety mask" />
           <div className="fslabel">fsociety</div>
-          <div className="mrtitle" id="mrtitle" />
+          <div className="mrtitle" id="mrtitle"><span id="mr1" /><span id="mr2" /></div>
           <button className="tap" id="tapBtn">[ Enter ]</button>
         </div>
       </div>
@@ -112,30 +113,35 @@ function boot(THREE: typeof import('three')): () => void {
   const isMobile = matchMedia('(max-width:760px)').matches
   const canvas = document.getElementById('gl') as HTMLCanvasElement
   let renderer: any
-  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' }) } catch { throw new Error('no webgl') }
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: false, stencil: false, powerPreference: 'high-performance' }) } catch { throw new Error('no webgl') }
   if (!renderer.getContext()) throw new Error('no ctx')
-  const DPR = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2)
-  renderer.setPixelRatio(DPR); renderer.setSize(innerWidth, innerHeight); renderer.setClearColor(0x000000, 1)
+  // fragment cost scales with DPR^2 — clamp hard for integrated GPUs
+  const DPR = Math.min(window.devicePixelRatio || 1, 1.25)
+  renderer.setPixelRatio(DPR); renderer.setSize(innerWidth, innerHeight)
+  const VOID = 0x0d0906                       // fog + background must match, else black voids
+  renderer.setClearColor(VOID, 1)
+
+  const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v))
+  const mix=(a:number,b:number,t:number)=>a+(b-a)*t
 
   const tex = (draw: (c: CanvasRenderingContext2D, cv: HTMLCanvasElement)=>void, w: number, h?: number) => {
     const cv = document.createElement('canvas'); cv.width = w; cv.height = h || w; draw(cv.getContext('2d')!, cv)
-    const t = new THREE.CanvasTexture(cv); t.needsUpdate = true; t.anisotropy = 8; return t
+    const t = new THREE.CanvasTexture(cv); t.needsUpdate = true
+    t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy())
+    return t
   }
   const glowTex = (col: string) => tex((x, c) => { const g = x.createRadialGradient(c.width/2,c.width/2,0,c.width/2,c.width/2,c.width/2); g.addColorStop(0,col); g.addColorStop(.28,col); g.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=g; x.fillRect(0,0,c.width,c.width) }, 128)
 
   /* =========================================================
-     BLACK HOLE — lightweight mesh build (i3-friendly, stable)
-     event horizon + edge-on accretion disk + lensed halo ring
-     + soft round stars.  No raymarch, no pixel noise.
+     BLACK HOLE — light mesh build (default) + optional HD shader
      ========================================================= */
-  const holeScene = new THREE.Scene()
-  const holeCam = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, 0.1, 500)
+  const holeScene = new THREE.Scene(); holeScene.background = new THREE.Color(0x000000)
+  const holeCam = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, 1, 400)
 
-  // soft round star sprite (not square pixels)
   const dotTex = glowTex('rgba(255,255,255,1)')
-  const STAR_N = isMobile ? 900 : 1600
+  const STAR_N = isMobile ? 800 : 1400
   const spos = new Float32Array(STAR_N*3), scol = new Float32Array(STAR_N*3)
-  for (let i=0;i<STAR_N;i++){ const r=60+Math.random()*180, th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1)
+  for (let i=0;i<STAR_N;i++){ const r=60+Math.random()*160, th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1)
     spos[i*3]=r*Math.sin(ph)*Math.cos(th); spos[i*3+1]=r*Math.cos(ph); spos[i*3+2]=r*Math.sin(ph)*Math.sin(th)
     const w=0.6+Math.random()*0.4, tint=Math.random(); scol[i*3]=w; scol[i*3+1]=w*(0.9+tint*0.1); scol[i*3+2]=w*(0.85+tint*0.15) }
   const starGeo = new THREE.BufferGeometry()
@@ -144,15 +150,13 @@ function boot(THREE: typeof import('three')): () => void {
   const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ size:isMobile?1.1:1.4, map:dotTex, vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, sizeAttenuation:true }))
   holeScene.add(stars)
 
-  // background bloom
-  const bg = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex('rgba(255,150,80,0.30)'), transparent:true, depthWrite:false, blending:THREE.AdditiveBlending }))
-  bg.scale.set(26,26,1); bg.position.set(0,0,0); holeScene.add(bg)
+  const bg = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex('rgba(255,150,80,0.26)'), transparent:true, depthWrite:false, blending:THREE.AdditiveBlending }))
+  bg.scale.set(24,24,1); holeScene.add(bg)
 
-  // event horizon
-  const horizon = new THREE.Mesh(new THREE.SphereGeometry(2.15, 40, 40), new THREE.MeshBasicMaterial({ color:0x000000 }))
+  const horizon = new THREE.Mesh(new THREE.SphereGeometry(2.15, 32, 32), new THREE.MeshBasicMaterial({ color:0x000000 }))
   holeScene.add(horizon)
 
-  // accretion disk (edge-on plane, turbulent hot texture)
+  // accretion disk — RING geometry (no square corners), texture is a clean annulus
   const diskTex = tex((x,c)=>{
     const s=c.width, cx=s/2, cy=s/2; x.clearRect(0,0,s,s)
     const g=x.createRadialGradient(cx,cy,s*0.16,cx,cy,s*0.5)
@@ -160,21 +164,21 @@ function boot(THREE: typeof import('three')): () => void {
     g.addColorStop(0.31,'rgba(255,150,60,0.55)'); g.addColorStop(0.40,'rgba(255,224,160,0.98)')
     g.addColorStop(0.49,'rgba(255,186,96,0.78)'); g.addColorStop(0.60,'rgba(196,66,24,0.24)'); g.addColorStop(0.72,'rgba(120,40,16,0.05)'); g.addColorStop(0.82,'rgba(0,0,0,0)')
     x.fillStyle=g; x.fillRect(0,0,s,s)
-    // turbulent arc streaks
-    for(let i=0;i<300;i++){ const ang=Math.random()*Math.PI*2, rr=s*(0.17+Math.random()*0.32)
+    for(let i=0;i<280;i++){ const ang=Math.random()*Math.PI*2, rr=s*(0.17+Math.random()*0.32)
       x.beginPath(); x.arc(cx,cy,rr,ang,ang+0.02+Math.random()*0.09)
       const a=0.03+Math.random()*0.10, hot=Math.random()>0.5
       x.strokeStyle=hot?`rgba(255,232,190,${a})`:`rgba(255,150,70,${a})`; x.lineWidth=0.6+Math.random()*2.4; x.stroke() }
-    // Doppler: one side a touch brighter
-    const dg=x.createLinearGradient(0,0,s,0); dg.addColorStop(0,'rgba(255,240,210,0.10)'); dg.addColorStop(0.5,'rgba(0,0,0,0)'); dg.addColorStop(1,'rgba(0,0,0,0)')
-    x.globalCompositeOperation='lighter'; x.fillStyle=dg; x.fillRect(0,0,s,s); x.globalCompositeOperation='source-over'
-  }, 1024)
+    // Doppler brightening — source-atop so it ONLY touches existing disk pixels
+    // (a 'lighter' pass over the full square is what produced the flat white sheet)
+    const dg=x.createLinearGradient(0,0,s,0); dg.addColorStop(0,'rgba(255,240,210,0.30)'); dg.addColorStop(0.45,'rgba(255,255,255,0)'); dg.addColorStop(1,'rgba(255,255,255,0)')
+    x.globalCompositeOperation='source-atop'; x.fillStyle=dg; x.fillRect(0,0,s,s); x.globalCompositeOperation='source-over'
+  }, 512)
   diskTex.center.set(0.5,0.5)
-  const disk = new THREE.Mesh(new THREE.PlaneGeometry(10,10), new THREE.MeshBasicMaterial({ map:diskTex, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide }))
-  disk.rotation.x = -1.24  // near edge-on
+  const disk = new THREE.Mesh(new THREE.RingGeometry(2.3, 5.0, 96, 1), new THREE.MeshBasicMaterial({ map:diskTex, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide }))
+  disk.rotation.x = -1.24
   holeScene.add(disk)
 
-  // lensed halo / photon ring — billboard, wraps the sphere (Interstellar look)
+  // lensed photon ring (billboard)
   const haloTex = tex((x,c)=>{
     const s=c.width, cx=s/2; x.clearRect(0,0,s,s)
     const g=x.createRadialGradient(cx,cx,s*0.30,cx,cx,s*0.5)
@@ -186,69 +190,224 @@ function boot(THREE: typeof import('three')): () => void {
   const halo = new THREE.Mesh(new THREE.PlaneGeometry(5.9,5.9), new THREE.MeshBasicMaterial({ map:haloTex, transparent:true, depthWrite:false, depthTest:false, blending:THREE.AdditiveBlending }))
   holeScene.add(halo)
 
+  /* ---- optional HD mode: real raymarched lensing (off by default) ---- */
+  const HOLE_FS = `precision highp float;uniform vec2 u_res;uniform float u_time;uniform float u_dive;uniform vec2 u_mouse;
+  float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+  float noise(vec2 p){vec2 i=floor(p),f=fract(p);float a=hash(i),b=hash(i+vec2(1,0)),c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));vec2 u=f*f*(3.-2.*f);return mix(a,b,u.x)+(c-a)*u.y*(1.-u.x)+(d-b)*u.x*u.y;}
+  float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<3;i++){s+=a*noise(p);p*=2.04;a*=.5;}return s;}
+  mat3 cam(vec3 ro,vec3 ta){vec3 f=normalize(ta-ro),r=normalize(cross(vec3(0,1,0),f)),u=cross(f,r);return mat3(r,u,f);}
+  void main(){
+   vec2 uv=(gl_FragCoord.xy-.5*u_res.xy)/u_res.y;
+   float dive=u_dive; float dist=mix(19.0,8.5,dive);
+   vec3 ro=vec3(sin(u_mouse.x*0.6)*dist, mix(2.4,1.0,dive)+u_mouse.y*2.0, cos(u_mouse.x*0.6)*dist);
+   mat3 cm=cam(ro,vec3(0.0)); vec3 rd=normalize(cm*vec3(uv,mix(1.5,1.05,dive)));
+   vec3 pos=ro,dir=rd; float rs=1.0,dt=0.38; vec3 col=vec3(0.0); float hit=0.0,glow=0.0;
+   for(int i=0;i<52;i++){
+     float r=length(pos); glow+=0.0028/(0.02+abs(r-2.6));
+     if(r<rs){hit=1.0;break;}
+     vec3 g=-normalize(pos)*(1.35*rs)/(r*r); vec3 ndir=normalize(dir+g*dt); vec3 np=pos+ndir*dt*(r*0.55+0.6);
+     if(pos.y*np.y<0.0){float t=pos.y/(pos.y-np.y);vec3 hp=mix(pos,np,t);float hr=length(hp.xz);
+       if(hr>2.2&&hr<8.5){float ang=atan(hp.z,hp.x);float spin=u_time*1.35;
+         float sw=fbm(vec2(hr*0.9-spin,ang*2.5+hr*0.4));float band=smoothstep(8.5,2.2,hr);
+         vec3 hot=mix(vec3(1.0,0.45,0.12),vec3(1.0,0.94,0.76),band);
+         vec3 orb=normalize(vec3(-hp.z,0.0,hp.x));float dop=0.55+0.95*clamp(dot(orb,-dir),-1.0,1.0);
+         col+=hot*band*(0.35+sw*1.2)*dop*1.45;}}
+     dir=ndir;pos=np;}
+   // round, soft stars — a raw hash of floor() gives blocky square pixels
+   vec3 sd=normalize(dir);
+   vec2 sc=sd.xy*210.0+sd.z*30.0; vec2 ci=floor(sc), cf=fract(sc)-0.5;
+   float st=pow(hash(ci),58.0)*smoothstep(0.40,0.02,length(cf));
+   col+=vec3(st)*1.5*(1.0-hit); col+=vec3(1.0,0.87,0.66)*glow*0.5; col*=(1.0-hit);
+   col=pow(col,vec3(0.86)); gl_FragColor=vec4(col,1.0);}`
+  let hdScene:any=null, hdCam:any=null, hdMat:any=null
+  function ensureHD(){
+    if(hdScene) return
+    hdScene = new THREE.Scene(); hdCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1)
+    hdMat = new THREE.ShaderMaterial({ uniforms:{ u_res:{value:new THREE.Vector2(1,1)}, u_time:{value:0}, u_dive:{value:0}, u_mouse:{value:new THREE.Vector2(0,0)} },
+      vertexShader:'void main(){gl_Position=vec4(position,1.0);}', fragmentShader:HOLE_FS })
+    hdScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), hdMat))
+  }
+  let hd = false
+  try { hd = localStorage.getItem('sp_hd')==='1' } catch {}
+
   /* =========================================================
-     TESSERACT LIBRARY — dense warm bookshelf lattice
+     TESSERACT — endless recycled 3D bookshelf lattice
+     Shared textures + baked UVs: NO Texture.clone() (that was
+     uploading ~76 copies of a 1024² texture and thrashing VRAM).
      ========================================================= */
-  const archScene = new THREE.Scene(); archScene.fog = new THREE.FogExp2(0x0b0704, 0.019)
-  const archCam = new THREE.PerspectiveCamera(isMobile?72:60, innerWidth/innerHeight, 0.1, 700)
+  const archScene = new THREE.Scene()
+  archScene.background = new THREE.Color(VOID)
+  archScene.fog = new THREE.FogExp2(VOID, 0.0115)
+  const archCam = new THREE.PerspectiveCamera(isMobile?74:64, innerWidth/innerHeight, 1, 400)
+
   const PAL = ['#7a2f27','#8f6a2e','#324b3a','#26323f','#5b3350','#8a6a34','#442a1c','#2c3a58','#6e4325','#4a5a26','#7d5230','#3a2a44','#93843f','#5a2c22','#804a2a','#38506a']
+  // 512² (not 1024²) — 4× less VRAM, better cache behaviour on an iGPU
   const shelfTex = (seed:number) => tex((x,c)=>{
-    const wg=x.createLinearGradient(0,0,c.width,c.height); wg.addColorStop(0,'#1f120a'); wg.addColorStop(1,'#281a0b'); x.fillStyle=wg; x.fillRect(0,0,c.width,c.height)
-    for(let i=0;i<200;i++){ x.fillStyle=`rgba(0,0,0,${0.03+Math.random()*0.06})`; x.fillRect(Math.random()*c.width,0,1,c.height) }
-    const rows=9, rh=c.height/rows
+    const W=c.width, H=c.height
+    const wg=x.createLinearGradient(0,0,W,H); wg.addColorStop(0,'#1d110a'); wg.addColorStop(1,'#271908'); x.fillStyle=wg; x.fillRect(0,0,W,H)
+    for(let i=0;i<150;i++){ x.fillStyle=`rgba(0,0,0,${0.03+Math.random()*0.06})`; x.fillRect(Math.random()*W,0,1,H) }
+    const rows=6, rh=H/rows
     let s=seed*97.13; const rnd=()=>{ s=(s*9301+49297)%233280; return s/233280 }
     for(let r=0;r<rows;r++){
-      const y0=r*rh, board=10, shelfBase=y0+rh-board
-      const ao=x.createLinearGradient(0,y0,0,y0+rh); ao.addColorStop(0,'rgba(0,0,0,0.55)'); ao.addColorStop(.4,'rgba(0,0,0,0)'); x.fillStyle=ao; x.fillRect(0,y0,c.width,rh)
-      let bx=6
-      while(bx<c.width-6){ const bw=13+Math.floor(rnd()*26); const bh=rh-board-4-Math.floor(rnd()*(rh*0.28)); const col=PAL[Math.floor(rnd()*PAL.length)]
+      const y0=r*rh, board=7, shelfBase=y0+rh-board
+      // deep shadow at the back of each shelf
+      const ao=x.createLinearGradient(0,y0,0,y0+rh); ao.addColorStop(0,'rgba(0,0,0,0.6)'); ao.addColorStop(.42,'rgba(0,0,0,0)'); x.fillStyle=ao; x.fillRect(0,y0,W,rh)
+      let bx=4
+      while(bx<W-4){
+        const bw=7+Math.floor(rnd()*15), bh=rh-board-3-Math.floor(rnd()*(rh*0.26)), col=PAL[Math.floor(rnd()*PAL.length)]
         const by=shelfBase-bh
         x.fillStyle=col; x.fillRect(bx,by,bw,bh)
-        x.fillStyle='rgba(255,255,255,0.10)'; x.fillRect(bx,by,2,bh)
-        x.fillStyle='rgba(0,0,0,0.38)'; x.fillRect(bx+bw-2,by,2,bh)
-        x.fillStyle='rgba(0,0,0,0.28)'; x.fillRect(bx,by,bw,3)
-        if(rnd()>0.4){ x.fillStyle=rnd()>0.5?'rgba(214,180,120,0.75)':'rgba(255,255,255,0.16)'; const ty=by+bh*0.26+rnd()*bh*0.4; x.fillRect(bx+3,ty,bw-6,rnd()>0.5?3:2) }
-        bx+=bw+1+Math.floor(rnd()*2) }
-      x.fillStyle='#33200f'; x.fillRect(0,shelfBase,c.width,board)
-      x.fillStyle='rgba(140,92,46,0.55)'; x.fillRect(0,shelfBase,c.width,2)
-      x.fillStyle='rgba(0,0,0,0.6)'; x.fillRect(0,shelfBase+board,c.width,5)
+        x.fillStyle='rgba(255,255,255,0.10)'; x.fillRect(bx,by,1,bh)
+        x.fillStyle='rgba(0,0,0,0.40)'; x.fillRect(bx+bw-1,by,1,bh)
+        if(rnd()>0.45){ x.fillStyle=rnd()>0.5?'rgba(214,180,120,0.75)':'rgba(255,255,255,0.16)'; x.fillRect(bx+1,by+bh*0.3+rnd()*bh*0.3,bw-2,2) }
+        // warm light BLEEDING between books — on unlit material a bright texel is
+        // emissive, so this is the glow with zero lights and zero bloom passes
+        if(rnd()>0.72){ const gx=bx+bw
+          const lg=x.createLinearGradient(gx-3,0,gx+4,0); lg.addColorStop(0,'rgba(255,190,110,0)'); lg.addColorStop(0.5,'rgba(255,236,200,1)'); lg.addColorStop(1,'rgba(255,190,110,0)')
+          x.fillStyle=lg; x.fillRect(gx-3,by,7,bh) }
+        bx+=bw+1
+      }
+      // board with a hot lit top edge and deep shadow beneath
+      x.fillStyle='#241408'; x.fillRect(0,shelfBase,W,board)
+      x.fillStyle='rgba(255,214,150,0.85)'; x.fillRect(0,shelfBase,W,1)
+      x.fillStyle='rgba(0,0,0,0.75)'; x.fillRect(0,shelfBase+board,W,4)
     }
-    const v=x.createRadialGradient(c.width/2,c.height/2,c.width*0.15,c.width/2,c.height/2,c.width*0.72); v.addColorStop(0,'rgba(255,190,110,0.06)'); v.addColorStop(1,'rgba(0,0,0,0.45)'); x.fillStyle=v; x.fillRect(0,0,c.width,c.height)
-  }, 1024, 1024)
-  const SHELVES = [shelfTex(1),shelfTex(2),shelfTex(3),shelfTex(4),shelfTex(5)]
-  const shelfMat = (i:number, rep:[number,number], tint=0x9a8f80, op=1) => { const t=SHELVES[i%SHELVES.length].clone(); t.needsUpdate=true; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rep[0],rep[1]); return new THREE.MeshBasicMaterial({map:t,color:new THREE.Color(tint),side:THREE.DoubleSide,fog:true,transparent:op<1,opacity:op}) }
+    // a couple of blown-out light seams per panel — the film's signature streaks
+    for(let i=0;i<3;i++){ const lx=rnd()*W
+      const lg=x.createLinearGradient(lx-2,0,lx+3,0); lg.addColorStop(0,'rgba(255,210,150,0)'); lg.addColorStop(0.5,'rgba(255,246,225,0.95)'); lg.addColorStop(1,'rgba(255,210,150,0)')
+      x.fillStyle=lg; x.fillRect(lx-2,0,5,H) }
+    const v=x.createRadialGradient(W/2,H/2,W*0.12,W/2,H/2,W*0.7); v.addColorStop(0,'rgba(255,190,110,0.05)'); v.addColorStop(1,'rgba(0,0,0,0.5)'); x.fillStyle=v; x.fillRect(0,0,W,H)
+  }, 512)
+
+  const SHELF_TEX = [shelfTex(1), shelfTex(2), shelfTex(3), shelfTex(4)]
+  SHELF_TEX.forEach(t=>{ t.wrapS=t.wrapT=THREE.RepeatWrapping })
+  // ONE material per texture — reused by every mesh (was 76 materials + 76 textures)
+  // dark multiplier: the film is deep shadow with bright warm seams, not flat tan
+  const SHELF_MAT = SHELF_TEX.map(t => new THREE.MeshBasicMaterial({ map:t, color:0x6e6353, side:THREE.DoubleSide, fog:true }))
+
+  /* quad builder — bakes per-panel tiling into UVs so the texture stays shared */
+  class QB {
+    pos:number[]=[]; uv:number[]=[]; idx:number[]=[]; n=0
+    quad(a:number[],b:number[],c:number[],d:number[],ru:number,rv:number){
+      this.pos.push(...a,...b,...c,...d)
+      this.uv.push(0,0, ru,0, ru,rv, 0,rv)
+      const i=this.n; this.idx.push(i,i+1,i+2, i,i+2,i+3); this.n+=4
+    }
+    // axis-aligned rectangle on a plane; ax = which axis is constant
+    rect(ax:'x'|'y'|'z', k:number, u0:number,u1:number, v0:number,v1:number, ru:number, rv:number){
+      const P=(u:number,v:number)=> ax==='x' ? [k,v,u] : ax==='y' ? [u,k,v] : [u,v,k]
+      this.quad(P(u0,v0),P(u1,v0),P(u1,v1),P(u0,v1),ru,rv)
+    }
+    build(){ const g=new THREE.BufferGeometry()
+      g.setAttribute('position', new THREE.Float32BufferAttribute(this.pos,3))
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(this.uv,2))
+      g.setIndex(this.idx); g.computeVertexNormals(); return g }
+  }
+
+  const CELL = 26          // depth of one lattice ring
+  const HALF = 10          // inner corridor half-size
+  const OUT  = 23          // outer shell — seen THROUGH the gaps, so never black
+  const BEAM = 3.0         // structural beam thickness
+  const RINGS = 7
+
+  /* One ring of the lattice — a single merged geometry (1 draw call).
+     Deliberately IRREGULAR: each side sits at its own distance and the openings
+     are offset, so it never reads as a uniform square tunnel. Beams cross the
+     view at varied heights/depths, which is the tesseract's defining feature. */
+  function buildRing(seed:number){
+    let s=seed*3571.7; const rnd=()=>{ s=(s*9301+49297)%233280; return s/233280 }
+    const q=new QB()
+    const z0=-0.4, z1=-CELL
+    // irregular corridor: every side at a different distance
+    const dL=HALF*(0.82+rnd()*0.55), dR=HALF*(0.82+rnd()*0.55)
+    const dT=HALF*(0.78+rnd()*0.5),  dB=HALF*(0.86+rnd()*0.5)
+    // inner walls, split into two panels with a real void between them so you
+    // see past them into deeper structure
+    const cut=0.30+rnd()*0.16
+    const segs:[number,number][]=[[z0, z0-CELL*cut],[z0-CELL*(cut+0.20+rnd()*0.10), z1+1.2]]
+    for(const [sa,sb] of segs){
+      q.rect('x', -dL, sa, sb, -dB, dT, 2, 2)
+      q.rect('x',  dR, sa, sb, -dB, dT, 2, 2)
+      q.rect('y',  dT, -dL, dR, sa, sb, 2, 2)
+      q.rect('y', -dB, -dL, dR, sa, sb, 2, 2)
+    }
+    // outer shell — full coverage behind the voids, so there is never black
+    q.rect('x', -OUT, z0, z1, -OUT, OUT, 3, 3)
+    q.rect('x',  OUT, z0, z1, -OUT, OUT, 3, 3)
+    q.rect('y',  OUT, -OUT, OUT, z0, z1, 3, 3)
+    q.rect('y', -OUT, -OUT, OUT, z0, z1, 3, 3)
+    // stepped shelf stacks receding from the corridor out to the shell —
+    // this is the "structure behind structure" depth the film has
+    for(let k=0;k<3;k++){
+      const zc=z0-CELL*(0.18+k*0.28+rnd()*0.06)
+      const ex=HALF*(1.25+k*0.5), ey=HALF*(1.2+k*0.5)
+      q.rect('z', zc, -ex, -dL, -ey, ey, 2, 3)
+      q.rect('z', zc,  dR,  ex, -ey, ey, 2, 3)
+      q.rect('z', zc, -dL, dR,  dT, ey, 3, 2)
+      q.rect('z', zc, -dL, dR, -ey, -dB, 3, 2)
+    }
+    // beams crossing the corridor at varied heights/depths — offset from the
+    // travel axis so the camera passes under/over/beside them
+    for(let k=0;k<3;k++){
+      const zb=z0-CELL*(0.22+k*0.3), horiz=rnd()>0.5
+      if(horiz){ const y=(rnd()>0.5?1:-1)*(3.4+rnd()*4.6)
+        q.rect('y', y, -dL, dR, zb, zb-BEAM*1.4, 3, 1)
+        q.rect('y', y-BEAM*0.55, -dL, dR, zb, zb-BEAM*1.4, 3, 1)
+        q.rect('z', zb, -dL, dR, y-BEAM*0.55, y, 3, 1)
+      } else { const xx=(rnd()>0.5?1:-1)*(3.4+rnd()*4.2)
+        q.rect('x', xx, zb, zb-BEAM*1.4, -dB, dT, 1, 3)
+        q.rect('x', xx+BEAM*0.55, zb, zb-BEAM*1.4, -dB, dT, 1, 3)
+        q.rect('z', zb, xx, xx+BEAM*0.55, -dB, dT, 1, 3)
+      }
+    }
+    return q.build()
+  }
 
   const lattice = new THREE.Group(); archScene.add(lattice)
-  const LEN=340, HALF=11
-  // continuous outer walls (far background so no black voids)
-  const wallGeo = new THREE.PlaneGeometry(LEN, HALF*2)
-  const mkWall=(i:number,rot:{x?:number,y?:number},pos:[number,number,number])=>{ const m=new THREE.Mesh(wallGeo, shelfMat(i,[LEN/22,1.6])); if(rot.x)m.rotation.x=rot.x; if(rot.y)m.rotation.y=rot.y; m.position.set(...pos); lattice.add(m) }
-  mkWall(0,{y:Math.PI/2},[-HALF,0,-LEN/2+14]); mkWall(1,{y:-Math.PI/2},[HALF,0,-LEN/2+14])
-  mkWall(2,{x:Math.PI/2},[0,HALF,-LEN/2+14]); mkWall(3,{x:-Math.PI/2},[0,-HALF,-LEN/2+14])
-  // nested shelf frames receding -> tesseract lattice depth
-  const stripH = 3.4
-  const topGeo = new THREE.PlaneGeometry(HALF*2, stripH), sideGeo = new THREE.PlaneGeometry(stripH, HALF*2)
-  for(let f=0; f<18; f++){
-    const z = -14 - f*17, tint = 0x8a8072
-    const top=new THREE.Mesh(topGeo, shelfMat(f, [2.4,0.5], tint)); top.position.set(0, HALF-stripH/2, z); lattice.add(top)
-    const bot=new THREE.Mesh(topGeo, shelfMat(f+1, [2.4,0.5], tint)); bot.position.set(0,-HALF+stripH/2, z); lattice.add(bot)
-    const lf=new THREE.Mesh(sideGeo, shelfMat(f+2, [0.5,2.4], tint)); lf.position.set(-HALF+stripH/2, 0, z); lattice.add(lf)
-    const rt=new THREE.Mesh(sideGeo, shelfMat(f+3, [0.5,2.4], tint)); rt.position.set(HALF-stripH/2, 0, z); lattice.add(rt)
+  const ringGeos = [buildRing(1), buildRing(2), buildRing(3)]
+  const rings: any[] = []
+  for(let i=0;i<RINGS;i++){
+    const m = new THREE.Mesh(ringGeos[i%ringGeos.length], SHELF_MAT[i%SHELF_MAT.length])
+    m.position.z = -i*CELL
+    lattice.add(m); rings.push(m)
   }
-  // warm god-ray shafts
-  const rayTex = tex((x,c)=>{ const g=x.createLinearGradient(0,0,0,c.height); g.addColorStop(0,'rgba(255,214,150,0)'); g.addColorStop(.5,'rgba(255,222,164,0.55)'); g.addColorStop(1,'rgba(255,214,150,0)'); x.fillStyle=g; x.fillRect(0,0,c.width,c.height) },16,256)
-  for(let i=0;i<10;i++){ const m=new THREE.Mesh(new THREE.PlaneGeometry(1.4, HALF*2.2), new THREE.MeshBasicMaterial({map:rayTex,transparent:true,opacity:0.20,blending:THREE.AdditiveBlending,depthWrite:false}))
-    m.position.set((i%2?1:-1)*(HALF-1.2), 0, -22 - i*30); m.rotation.y=(i%2?-0.4:0.4); lattice.add(m) }
-  const vp = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex('rgba(255,205,140,0.5)'), transparent:true, depthWrite:false, blending:THREE.AdditiveBlending })); vp.position.set(0,0,-LEN+40); vp.scale.set(30,30,1); archScene.add(vp)
-  const ARCH_Z0 = 6, ARCH_Z1 = -14 - 17*17  // camera z travel range
 
-  /* ---- state / journey ---- */
-  let prog=0,target=0,mode:'hole'|'arch'='hole',running=true,raf=0,flashT=0
-  const DIVE=0.42; let mx=0,my=0,cmx=0,cmy=0, curCard=-1
-  const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v))
-  const mix=(a:number,b:number,t:number)=>a+(b-a)*t
+  // distant scaled + rotated copies — the recursive "structure inside structure"
+  // that actually makes it read as a tesseract. Shares geometry+material (~0 VRAM).
+  const deep: any[] = []
+  ;[[0.34, 0.9, -120],[0.14, -0.6, -170]].forEach(([sc,rot,dz],i)=>{
+    const m=new THREE.Mesh(ringGeos[i%ringGeos.length], SHELF_MAT[(i+1)%SHELF_MAT.length])
+    m.scale.setScalar(sc as number); m.rotation.z=rot as number; ;(m as any).__dz=dz
+    archScene.add(m); deep.push(m)
+  })
 
-  /* ---- DOM project cards (never clip) ---- */
+  // backdrop shell — always something warm behind everything, never pure black
+  const shellTex = tex((x,c)=>{
+    const W=c.width,H=c.height
+    x.fillStyle='#0d0906'; x.fillRect(0,0,W,H)
+    for(let i=0;i<220;i++){ const w=2+Math.random()*7, h=10+Math.random()*70
+      x.fillStyle=`rgba(${90+Math.random()*70|0},${60+Math.random()*40|0},${30+Math.random()*25|0},${0.10+Math.random()*0.16})`
+      x.fillRect(Math.random()*W, Math.random()*H, w, h) }
+    for(let i=0;i<26;i++){ x.fillStyle=`rgba(255,200,130,${0.05+Math.random()*0.07})`; x.fillRect(Math.random()*W, Math.random()*H, 1+Math.random()*2, 26+Math.random()*70) }
+  }, 256)
+  shellTex.wrapS=shellTex.wrapT=THREE.RepeatWrapping; shellTex.repeat.set(4,4)
+  const shell = new THREE.Mesh(new THREE.BoxGeometry(300,300,300),
+    new THREE.MeshBasicMaterial({ map:shellTex, side:THREE.BackSide, fog:false, depthWrite:false }))
+  shell.renderOrder = -1; archScene.add(shell)
+
+  // warm god-ray shafts (billboarded sprites so they never go paper-thin)
+  const rayTex = tex((x,c)=>{ const g=x.createLinearGradient(0,0,0,c.height); g.addColorStop(0,'rgba(255,214,150,0)'); g.addColorStop(.5,'rgba(255,222,164,0.6)'); g.addColorStop(1,'rgba(255,214,150,0)'); x.fillStyle=g; x.fillRect(0,0,c.width,c.height) },16,256)
+  const rayMat = new THREE.SpriteMaterial({ map:rayTex, transparent:true, opacity:0.30, blending:THREE.AdditiveBlending, depthWrite:false, fog:true })
+  const rays:any[] = []
+  for(let i=0;i<6;i++){ const s=new THREE.Sprite(rayMat); s.scale.set(3.2, HALF*2.4, 1)
+    s.position.set((i%2?1:-1)*(HALF-1.4), (i%3-1)*4, -i*CELL*1.15); archScene.add(s); rays.push(s) }
+
+  /* ---- journey state (endless) ---- */
+  let prog=0, target=0, mode:'hole'|'arch'='hole', running=true, raf=0, flashT=0
+  const DIVE=0.42, TRAVEL=300, CARD_SPAN=34
+  let mx=0,my=0,cmx=0,cmy=0, curCard=-1
+
+  /* ---- DOM project cards ---- */
   const work=$('#work')!
   const cardHTML=(p:Project,i:number)=>{
     const go = p.url ? `<a class="go" href="${p.url}" target="_blank" rel="noopener">${p.cta} ↗</a>` : `<span class="go soon">${p.cta}</span>`
@@ -260,38 +419,57 @@ function boot(THREE: typeof import('three')): () => void {
 
   const rail=$('#rail')!
   PROJECTS.forEach((p,i)=>{ const b=document.createElement('button'); b.title=p.n
-    b.onclick=()=>{ target=clamp(DIVE + (1-DIVE)*(i/(PROJECTS.length-1)), DIVE+0.01, 1) }; rail.appendChild(b) })
+    b.onclick=()=>{ target = DIVE + ((i+0.35)*CARD_SPAN)/TRAVEL }; rail.appendChild(b) })
 
-  /* ---- audio (owner's file): soft on load, punch on break, mute btn ---- */
+  /* ---- audio: owner's clip, plays once from the very start ---- */
   const snd = document.getElementById('snd') as HTMLAudioElement
-  const muteBtn = $('#mute')!
+  const muteBtn = $('#mute')!, hdBtn = $('#hd')!
   const SPK='<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm11.5 3a4.5 4.5 0 00-2.5-4.03v8.06A4.5 4.5 0 0014.5 12z"/></svg>'
   const MUT='<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M15 9l5 5m0-5l-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>'
-  let muted=false, started=false; if(snd){ snd.volume=0 }
+  let muted=false, started=false
   muteBtn.innerHTML=SPK
-  function fade(to:number,ms:number){ if(!snd) return; const f=snd.volume, t0=performance.now(); const st=()=>{ const k=clamp((performance.now()-t0)/ms,0,1); snd.volume=muted?0:mix(f,to,k); if(k<1) requestAnimationFrame(st) }; st() }
-  function startAudio(){ if(started||!snd) return; snd.play().then(()=>{ started=true; if(!muted) fade(0.5,900) }).catch(()=>{}) }
-  ;['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,startAudio,{passive:true}))
-  muteBtn.onclick=()=>{ muted=!muted; muteBtn.innerHTML=muted?MUT:SPK; if(snd){ snd.muted=muted; if(!muted){ startAudio(); fade(0.5,500) } } }
+  if(snd) snd.volume = 0.85
+  function startAudio(fromStart=false){
+    if(!snd || muted) return
+    if(started && !fromStart) return
+    if(fromStart){ try{ snd.currentTime=0 }catch{} }
+    snd.play().then(()=>{ started=true }).catch(()=>{})
+  }
+  // first gesture rescues it if the browser blocked autoplay — restart from 0 so
+  // the owner still hears it from the beginning
+  const unlock=()=>{ if(!started) startAudio(true) }
+  ;['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,unlock,{passive:true}))
+  muteBtn.onclick=()=>{ muted=!muted; muteBtn.innerHTML=muted?MUT:SPK; if(snd){ snd.muted=muted; if(!muted && !started) startAudio(true) } }
+  hdBtn.classList.toggle('on', hd)
+  hdBtn.onclick=()=>{ hd=!hd; hdBtn.classList.toggle('on',hd); try{ localStorage.setItem('sp_hd', hd?'1':'0') }catch{}
+    if(hd) ensureHD(); toast(hd?'High detail on — heavier on low-end machines':'High detail off') }
 
   /* ---- events ---- */
-  function onResize(){ renderer.setSize(innerWidth,innerHeight); holeCam.aspect=innerWidth/innerHeight; holeCam.updateProjectionMatrix(); archCam.aspect=innerWidth/innerHeight; archCam.updateProjectionMatrix() }
+  const panelOpen = () => !!document.querySelector('#overlay.open')
+  function onResize(){ renderer.setSize(innerWidth,innerHeight)
+    holeCam.aspect=innerWidth/innerHeight; holeCam.updateProjectionMatrix()
+    archCam.aspect=innerWidth/innerHeight; archCam.updateProjectionMatrix()
+    if(hdMat) hdMat.uniforms.u_res.value.set(renderer.domElement.width, renderer.domElement.height) }
   addEventListener('resize',onResize,{passive:true})
-  const onVis=()=>{ running=!document.hidden; if(running) loop() }; document.addEventListener('visibilitychange',onVis)
-  const onWheel=(e:WheelEvent)=>{ target=clamp(target+e.deltaY*0.00042,0,1); $('#cue')?.classList.remove('show') }
+  const onVis=()=>{ running=!document.hidden; if(running){ last=performance.now(); loop() } }
+  document.addEventListener('visibilitychange',onVis)
+  // panels must scroll on their own without dragging the tesseract along
+  const onWheel=(e:WheelEvent)=>{ if(panelOpen()) return; target=Math.max(0, target+e.deltaY*0.00042); $('#cue')?.classList.remove('show') }
   addEventListener('wheel',onWheel,{passive:true})
   let ty=0
   const onTS=(e:TouchEvent)=>{ ty=e.touches[0].clientY }
-  const onTM=(e:TouchEvent)=>{ const y=e.touches[0].clientY; target=clamp(target+(ty-y)*0.0015,0,1); ty=y; $('#cue')?.classList.remove('show') }
+  const onTM=(e:TouchEvent)=>{ if(panelOpen()) return; const y=e.touches[0].clientY; target=Math.max(0, target+(ty-y)*0.0015); ty=y; $('#cue')?.classList.remove('show') }
   canvas.addEventListener('touchstart',onTS,{passive:true}); canvas.addEventListener('touchmove',onTM,{passive:true})
   const onMove=(e:MouseEvent)=>{ mx=(e.clientX/innerWidth-0.5)*2; my=(e.clientY/innerHeight-0.5)*2 }
   addEventListener('mousemove',onMove)
-  const onKey=(e:KeyboardEvent)=>{ if(e.key==='ArrowDown'||e.key==='PageDown')target=clamp(target+0.06,0,1); if(e.key==='ArrowUp'||e.key==='PageUp')target=clamp(target-0.06,0,1); if(e.key==='Escape')closePanel() }
+  const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape'){ closePanel(); return } if(panelOpen()) return
+    if(e.key==='ArrowDown'||e.key==='PageDown')target=Math.max(0,target+0.06)
+    if(e.key==='ArrowUp'||e.key==='PageUp')target=Math.max(0,target-0.06) }
   addEventListener('keydown',onKey)
   document.querySelectorAll('.menu [data-jump], .brand').forEach(b=> (b as HTMLElement).onclick=()=>{ target=parseFloat((b as HTMLElement).dataset.jump||'0') })
   document.querySelectorAll('.menu [data-panel]').forEach(b=> (b as HTMLElement).onclick=()=> openPanel((b as HTMLElement).dataset.panel!))
 
-  /* ---- folder panels (mac dots + black/red) ---- */
+  /* ---- folder panels ---- */
   const overlay=$('#overlay')!, folder=$('#folder')!
   function closePanel(){ overlay.classList.remove('open') }
   overlay.addEventListener('click',e=>{ if(e.target===overlay) closePanel() })
@@ -320,69 +498,62 @@ function boot(THREE: typeof import('three')): () => void {
 
   let toastT:any; function toast(msg:string){ const el=$('#toast')!; el.textContent=msg; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),3200) }
 
-  /* ---- realistic glass shatter — radial impact fracture (Black Mirror) ---- */
+  /* ---- realistic glass shatter — radial impact fracture ---- */
   function genShatter(host: HTMLElement){
     while(host.firstChild) host.removeChild(host.firstChild)
-    const cv=document.createElement('canvas'); const W=cv.width=Math.min(innerWidth*DPR,2200)|0, H=cv.height=Math.min(innerHeight*DPR,1400)|0; host.appendChild(cv)
+    const cv=document.createElement('canvas'); const W=cv.width=Math.min(innerWidth*DPR,2000)|0, H=cv.height=Math.min(innerHeight*DPR,1300)|0; host.appendChild(cv)
     const x=cv.getContext('2d')!; const cx=W*(0.42+Math.random()*0.16), cy=H*(0.34+Math.random()*0.18)
     let s=(Math.random()*1e6)|0; const rnd=(a=0,b=1)=>{ s=(s*9301+49297)%233280; return a+(s/233280)*(b-a) }
     const R=Math.max(W,H), K=R/1600
     const glow=(a:number)=>{ x.shadowColor=`rgba(225,238,255,${a})`; x.shadowBlur=3*K }
     const noGlow=()=>{ x.shadowBlur=0 }
-    // irregular angular spokes (chaotic, not evenly spaced)
     const N=20+Math.floor(rnd(0,6)); const ang:number[]=[]; let acc=0
     for(let i=0;i<N;i++){ ang.push(acc); acc+=(Math.PI*2/N)*rnd(0.45,1.75) }
     const norm=Math.PI*2/acc; for(let i=0;i<N;i++) ang[i]*=norm
-    // jittered ring radii — a TIGHT central shatter cluster only (rest stays dark)
-    const rings=[10*K]; while(rings[rings.length-1] < 0.34*R){ rings.push(rings[rings.length-1]*rnd(1.4,1.9)) }
-    const jit:number[][]=rings.map(()=>ang.map(()=>rnd(-0.14,0.14)))
-    const jr:number[][]=rings.map((r)=> ang.map(()=> r*rnd(0.82,1.18)))
+    const ringsR=[10*K]; while(ringsR[ringsR.length-1] < 0.34*R){ ringsR.push(ringsR[ringsR.length-1]*rnd(1.4,1.9)) }
+    const jit:number[][]=ringsR.map(()=>ang.map(()=>rnd(-0.14,0.14)))
+    const jr:number[][]=ringsR.map((r)=> ang.map(()=> r*rnd(0.82,1.18)))
     const pt=(ri:number,i:number)=>{ const a=ang[i]+jit[ri][i], r=jr[ri][i]; return [cx+Math.cos(a)*r, cy+Math.sin(a)*r] as [number,number] }
-    // filled irregular shards in the central cluster
-    for(let k=0;k<rings.length-1;k++){ for(let i=0;i<N;i++){
+    for(let k=0;k<ringsR.length-1;k++){ for(let i=0;i<N;i++){
       const j=(i+1)%N; const A=pt(k,i),B=pt(k,j),C=pt(k+1,j),D=pt(k+1,i)
       x.beginPath(); x.moveTo(A[0],A[1]); x.lineTo(B[0],B[1]); x.lineTo(C[0],C[1]); x.lineTo(D[0],D[1]); x.closePath()
       const lit=rnd()>0.66
       x.fillStyle= lit ? `rgba(205,224,245,${rnd(0.06,0.16)})` : `rgba(110,140,175,${rnd(0.01,0.05)})`; x.fill()
       x.lineWidth=rnd(0.5,1.8)*K; x.strokeStyle=`rgba(255,255,255,${rnd(0.4,0.9)})`; glow(0.65); x.stroke(); noGlow()
     }}
-    // long radial cracks bursting outward past the cluster — irregular length, varied width, branches
-    for(let i=0;i<N;i++){ if(rnd()<0.12) continue        // a few spokes don't propagate far -> irregular
+    for(let i=0;i<N;i++){ if(rnd()<0.12) continue
       const a=ang[i]+rnd(-0.05,0.05); let px=cx,py=cy; x.beginPath(); x.moveTo(cx,cy)
       const seg=Math.round(rnd(5,9)), rmax=rnd(0.5,1.05)*R
       for(let g=1;g<=seg;g++){ const rr2=rmax*g/seg; px=cx+Math.cos(a)*rr2+rnd(-22,22)*K; py=cy+Math.sin(a)*rr2+rnd(-22,22)*K; x.lineTo(px,py) }
       x.lineWidth=rnd(0.6,2.6)*K; x.strokeStyle=`rgba(255,255,255,${rnd(0.4,0.9)})`; glow(0.5); x.stroke(); noGlow()
-      // 0-2 branches
       for(let bn=0;bn<2;bn++){ if(rnd()>0.5) continue; const bt=rnd(0.35,0.85), bx=cx+(px-cx)*bt, by=cy+(py-cy)*bt, ba=a+rnd(-1.0,1.0), bl=rnd(50,190)*K
         x.beginPath(); x.moveTo(bx,by); x.lineTo(bx+Math.cos(ba)*bl,by+Math.sin(ba)*bl); x.lineWidth=rnd(0.4,1.1)*K; x.strokeStyle=`rgba(255,255,255,${rnd(0.35,0.7)})`; x.stroke() } }
-    // a few jagged cross-links in the mid zone (connect adjacent cracks) for realism
     for(let i=0;i<N;i++){ if(rnd()>0.4) continue; const j=(i+1)%N, r=rnd(0.34,0.6)*R
       const ax=cx+Math.cos(ang[i])*r, ay=cy+Math.sin(ang[i])*r, bx=cx+Math.cos(ang[j])*r*rnd(0.85,1.15), by=cy+Math.sin(ang[j])*r*rnd(0.85,1.15)
       const mxp=(ax+bx)/2+rnd(-30,30)*K, myp=(ay+by)/2+rnd(-30,30)*K
       x.beginPath(); x.moveTo(ax,ay); x.lineTo(mxp,myp); x.lineTo(bx,by); x.lineWidth=rnd(0.4,1.2)*K; x.strokeStyle=`rgba(255,255,255,${rnd(0.3,0.6)})`; x.stroke() }
-    // glass dust — dense near impact, sparse outward
     for(let i=0;i<340;i++){ const a=rnd(0,Math.PI*2), r=Math.pow(rnd(),1.7)*0.5*R+8; const gx=cx+Math.cos(a)*r, gy=cy+Math.sin(a)*r
       x.fillStyle=`rgba(255,255,255,${rnd(0.12,0.85)})`; const sz=rnd(0.4,2.4)*K; x.fillRect(gx,gy,sz,sz) }
-    // hot impact core
     const cg=x.createRadialGradient(cx,cy,0,cx,cy,58*K); cg.addColorStop(0,'rgba(255,255,255,0.95)'); cg.addColorStop(0.35,'rgba(220,235,255,0.28)'); cg.addColorStop(1,'rgba(255,255,255,0)')
     x.fillStyle=cg; x.beginPath(); x.arc(cx,cy,58*K,0,7); x.fill()
     cv.style.width='100%'; cv.style.height='100%'
   }
 
-  /* ---- intro ---- */
+  /* ---- intro: 8 s load, then the break ---- */
+  const LOAD_MS = RM ? 400 : 8000
   function runIntro(){
-    const bm=$('#bmload')!, crack=$('#crack')!, stage=$('#stage')!, mr=$('#mrtitle')!, tap=$('#tapBtn') as HTMLButtonElement, mask=$('#fsmask')!, intro=$('#intro')!
-    startAudio()
-    setTimeout(()=>{ muteBtn.classList.add('show') }, 400)
-    setTimeout(breakScreen, RM?200:2400)
+    const bm=$('#bmload')!, crack=$('#crack')!, stage=$('#stage')!, tap=$('#tapBtn') as HTMLButtonElement, mask=$('#fsmask')!, intro=$('#intro')!
+    const mr1=$('#mr1')!, mr2=$('#mr2')!
+    startAudio()                                   // from the very beginning
+    setTimeout(()=>{ muteBtn.classList.add('show'); hdBtn.classList.add('show') }, 500)
+    setTimeout(breakScreen, LOAD_MS)
     function breakScreen(){ genShatter(crack); bm.classList.add('hide'); crack.classList.add('show'); intro.classList.add('breaking')
-      startAudio(); fade(1.0,60); setTimeout(()=>fade(0.5,1400),260)  // punch on break
       const fl=$('#flash')!; fl.style.transition='none'; fl.style.opacity='0.97'; setTimeout(()=>{ fl.style.transition='opacity .5s'; fl.style.opacity='0' },70)
       setTimeout(()=>{ intro.classList.remove('breaking'); reveal() }, RM?0:600) }
     function reveal(){ stage.classList.add('show'); mask.classList.add('in')
-      const full='HELLO, FRIEND'; let i=0
-      setTimeout(()=>{ mr.classList.add('gl'); (function typ(){ if(i<=full.length){ mr.textContent=full.slice(0,i); i++; setTimeout(typ,RM?0:62) } else tap.classList.add('show') })() }, RM?0:440) }
-    function go(){ if(intro.classList.contains('gone')) return; intro.classList.add('gone'); $('#hud')!.classList.add('show'); $('#cue')!.classList.add('show'); startAudio() }
+      const type=(el:HTMLElement,word:string,done:()=>void)=>{ let i=0; (function t(){ if(i<=word.length){ el.textContent=word.slice(0,i); i++; setTimeout(t,RM?0:70) } else done() })() }
+      setTimeout(()=>{ $('#mrtitle')!.classList.add('gl'); type(mr1,'HELLO',()=>type(mr2,'FRIEND',()=>tap.classList.add('show'))) }, RM?0:420) }
+    function go(){ if(intro.classList.contains('gone')) return; intro.classList.add('gone'); $('#hud')!.classList.add('show'); $('#cue')!.classList.add('show') }
     tap.onclick=go
     addEventListener('keydown', e=>{ if(e.key==='Enter'&&stage.classList.contains('show')) go() })
   }
@@ -395,7 +566,9 @@ function boot(THREE: typeof import('three')): () => void {
     prog += (target-prog)*0.06
     const t=now*0.001
     const nm:'hole'|'arch' = prog<DIVE-0.005 ? 'hole':'arch'
-    if(nm!==mode){ mode=nm; if(nm==='arch'){ work.classList.add('show'); if(!(window as any).__ag){(window as any).__ag=1;toast('Scroll to move through the library · click a card to open it · menu for About / Contact')} } else { work.classList.remove('show') }
+    if(nm!==mode){ mode=nm
+      if(nm==='arch'){ work.classList.add('show'); if(!(window as any).__ag){(window as any).__ag=1;toast('Scroll to travel deeper — the library never ends · menu for About / Contact')} }
+      else work.classList.remove('show')
       $('#flash')!.style.transition='none'; $('#flash')!.style.opacity='0.7'; flashT=now }
     if(flashT){ const e=(now-flashT)/650; if(e>=1){flashT=0;$('#flash')!.style.opacity='0'} else {$('#flash')!.style.transition='opacity .1s';$('#flash')!.style.opacity=String(0.7*(1-e))} }
     $('#namecard')!.style.opacity=String(clamp(1-prog/0.12,0,1))
@@ -404,20 +577,45 @@ function boot(THREE: typeof import('three')): () => void {
     if(mode==='hole'){
       cmx+=(mx-cmx)*0.04; cmy+=(my-cmy)*0.04
       const dive=clamp(prog/DIVE,0,1)
-      const dist=mix(15,6.6,dive), hgt=mix(3.1,1.5,dive)+cmy*1.4, orbit=t*0.05+cmx*0.45
-      holeCam.position.set(Math.sin(orbit)*dist, hgt, Math.cos(orbit)*dist); holeCam.lookAt(0,0,0)
-      diskTex.rotation += dt*0.00042; halo.quaternion.copy(holeCam.quaternion); stars.rotation.y += dt*0.00002
-      renderer.render(holeScene,holeCam)
+      if(hd){
+        ensureHD()
+        hdMat.uniforms.u_res.value.set(renderer.domElement.width, renderer.domElement.height)
+        hdMat.uniforms.u_time.value=t; hdMat.uniforms.u_dive.value=dive; hdMat.uniforms.u_mouse.value.set(cmx+t*0.03,cmy)
+        renderer.render(hdScene,hdCam)
+      } else {
+        const dist=mix(15,6.6,dive), hgt=mix(3.1,1.5,dive)+cmy*1.4, orbit=t*0.05+cmx*0.45
+        holeCam.position.set(Math.sin(orbit)*dist, hgt, Math.cos(orbit)*dist); holeCam.lookAt(0,0,0)
+        diskTex.rotation += dt*0.00042; halo.quaternion.copy(holeCam.quaternion); stars.rotation.y += dt*0.00002
+        renderer.render(holeScene,holeCam)
+      }
     } else {
-      const at=clamp((prog-DIVE)/(1-DIVE),0,1)
-      const cz=mix(ARCH_Z0,ARCH_Z1,at); cmx+=(mx-cmx)*0.045; cmy+=(my-cmy)*0.045
-      archCam.position.set(cmx*1.6,0.7+cmy*0.8,cz); archCam.lookAt(cmx*0.6,0.3,cz-20)
-      lattice.rotation.z = t*(isMobile?0.02:0.045)
-      const near=clamp(Math.round(at*(PROJECTS.length-1)),0,PROJECTS.length-1); showCard(near)
-      const dots=$('#rail')!.children; for(let i=0;i<dots.length;i++) dots[i].classList.toggle('on', i===near)
+      // endless travel — camera advances forever, rings recycle around it
+      const travel=(prog-DIVE)*TRAVEL
+      const cz=-travel
+      cmx+=(mx-cmx)*0.045; cmy+=(my-cmy)*0.045
+      archCam.position.set(cmx*1.8, 0.6+cmy*1.0, cz)
+      archCam.lookAt(cmx*0.7, 0.3, cz-22)
+      lattice.rotation.z = Math.sin(t*0.06)*0.06          // gentle drift, no spin-induced nausea
+      // treadmill: wrap every ring into the window ahead of the camera
+      const SPAN=RINGS*CELL
+      for(const r of rings){
+        let rel = r.position.z - cz
+        while(rel > CELL){ r.position.z -= SPAN; rel -= SPAN }
+        while(rel < -(RINGS-1)*CELL){ r.position.z += SPAN; rel += SPAN }
+      }
+      for(const s of rays){ let rel=s.position.z-cz
+        while(rel > CELL){ s.position.z -= SPAN; rel -= SPAN }
+        while(rel < -(RINGS-1)*CELL){ s.position.z += SPAN; rel += SPAN } }
+      for(const d of deep){ d.position.z = cz + (d as any).__dz; d.rotation.z += dt*0.00004 }
+      shell.position.set(0,0,cz)
+      const idx=((Math.floor(travel/CARD_SPAN) % PROJECTS.length)+PROJECTS.length)%PROJECTS.length
+      showCard(idx)
+      const dots=$('#rail')!.children; for(let i=0;i<dots.length;i++) dots[i].classList.toggle('on', i===idx)
       renderer.render(archScene,archCam)
     }
   }
+
+  ;(window as any).__glinfo = () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, textures: renderer.info.memory.textures, geoms: renderer.info.memory.geometries })
 
   runIntro(); loop()
 
