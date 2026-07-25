@@ -56,7 +56,7 @@ export default function Page() {
 
       <div id="intro">
         <div className="scan" />
-        <div className="bmload" id="bmload"><div className="ring" /><div className="bmsub">loading</div></div>
+        <div className="bmload" id="bmload"><div className="ring" /><div className="bmsub">loading</div><div className="begin" id="begin">click anywhere for sound</div></div>
         <div className="crack" id="crack" />
         <div className="stage" id="stage">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -429,17 +429,16 @@ function boot(THREE: typeof import('three')): () => void {
   let muted=false, started=false
   muteBtn.innerHTML=SPK
   if(snd) snd.volume = 0.85
-  function startAudio(fromStart=false){
-    if(!snd || muted) return
-    if(started && !fromStart) return
-    if(fromStart){ try{ snd.currentTime=0 }catch{} }
-    snd.play().then(()=>{ started=true }).catch(()=>{})
+  // play from 0 and resolve true only once playback is actually running, so the
+  // visual timeline can wait for it instead of running ahead in silence
+  function startAudio(): Promise<boolean> {
+    if(!snd || muted) return Promise.resolve(false)
+    try{ snd.currentTime=0 }catch{}
+    const pr = snd.play()
+    if(!pr || !pr.then) { started=true; return Promise.resolve(true) }
+    return pr.then(()=>{ started=true; return true }).catch(()=>false)
   }
-  // first gesture rescues it if the browser blocked autoplay — restart from 0 so
-  // the owner still hears it from the beginning
-  const unlock=()=>{ if(!started) startAudio(true) }
-  ;['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,unlock,{passive:true}))
-  muteBtn.onclick=()=>{ muted=!muted; muteBtn.innerHTML=muted?MUT:SPK; if(snd){ snd.muted=muted; if(!muted && !started) startAudio(true) } }
+  muteBtn.onclick=()=>{ muted=!muted; muteBtn.innerHTML=muted?MUT:SPK; if(snd) snd.muted=muted }
   hdBtn.classList.toggle('on', hd)
   hdBtn.onclick=()=>{ hd=!hd; hdBtn.classList.toggle('on',hd); try{ localStorage.setItem('sp_hd', hd?'1':'0') }catch{}
     if(hd) ensureHD(); toast(hd?'High detail on — heavier on low-end machines':'High detail off') }
@@ -539,15 +538,51 @@ function boot(THREE: typeof import('three')): () => void {
     cv.style.width='100%'; cv.style.height='100%'
   }
 
-  /* ---- intro: 8 s load, then the break ---- */
-  const LOAD_MS = RM ? 400 : 8000
+  /* ---- intro: spinner runs until the crack in the audio, then the break ----
+     CRACK_T is the measured impact transient in public/intro.mp3 (11.99 s clip:
+     sharpest onset at 5.98 s, loudest at 6.24 s). The break is driven off
+     snd.currentTime rather than a timer, so the shatter stays locked to the
+     sound even if playback starts late or stalls. */
+  const CRACK_T = 5.98
+  const LOAD_MS = RM ? 400 : CRACK_T*1000
+  const NO_INTERACT_MS = 12000        // never leave a silent visitor stuck
   function runIntro(){
     const bm=$('#bmload')!, crack=$('#crack')!, stage=$('#stage')!, tap=$('#tapBtn') as HTMLButtonElement, mask=$('#fsmask')!, intro=$('#intro')!
-    const mr1=$('#mr1')!, mr2=$('#mr2')!
-    startAudio()                                   // from the very beginning
+    const mr1=$('#mr1')!, mr2=$('#mr2')!, hint=$('#begin')!
     setTimeout(()=>{ muteBtn.classList.add('show'); hdBtn.classList.add('show') }, 500)
-    setTimeout(breakScreen, LOAD_MS)
-    function breakScreen(){ genShatter(crack); bm.classList.add('hide'); crack.classList.add('show'); intro.classList.add('breaking')
+
+    let timelineStarted=false, broke=false
+    function beginTimeline(withAudio:boolean){
+      if(timelineStarted) return
+      timelineStarted=true
+      hint.classList.remove('show')
+      if(withAudio && snd){
+        // lock the shatter to the audio clock
+        const watch=()=>{ if(broke) return
+          if(snd.paused || snd.ended || snd.currentTime>=CRACK_T) return breakScreen()
+          requestAnimationFrame(watch) }
+        requestAnimationFrame(watch)
+        setTimeout(()=>{ if(!broke) breakScreen() }, LOAD_MS+2500)   // stall guard
+      } else {
+        setTimeout(()=>{ if(!broke) breakScreen() }, LOAD_MS)
+      }
+    }
+
+    // try to play immediately; only start the visuals once sound is really going
+    startAudio().then(ok=>{
+      if(ok) return beginTimeline(true)
+      if(RM || muted) return beginTimeline(false)
+      // autoplay blocked — hold the spinner and invite one click, then run
+      // both together so the crack still lands on the sound
+      hint.classList.add('show')
+      const onFirst=()=>{ ;['pointerdown','keydown','touchstart'].forEach(ev=>removeEventListener(ev,onFirst))
+        startAudio().then(ok2=>beginTimeline(ok2)) }
+      ;['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,onFirst,{passive:true}))
+      setTimeout(()=>{ if(!timelineStarted){ ;['pointerdown','keydown','touchstart'].forEach(ev=>removeEventListener(ev,onFirst)); beginTimeline(false) } }, NO_INTERACT_MS)
+    })
+
+    function breakScreen(){ if(broke) return; broke=true
+      genShatter(crack); bm.classList.add('hide'); crack.classList.add('show'); intro.classList.add('breaking')
       const fl=$('#flash')!; fl.style.transition='none'; fl.style.opacity='0.97'; setTimeout(()=>{ fl.style.transition='opacity .5s'; fl.style.opacity='0' },70)
       setTimeout(()=>{ intro.classList.remove('breaking'); reveal() }, RM?0:600) }
     function reveal(){ stage.classList.add('show'); mask.classList.add('in')
