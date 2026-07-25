@@ -1,9 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-
-const SITE_URL = 'https://soumodityapramanik.in'
-const NAME = 'Soumoditya Pramanik'
-const DESCRIPTION = 'Developer & maker from India. I build web apps, AI tools and interactive interfaces with React, Next.js and TypeScript.'
+import { NAME, SITE_URL, DESCRIPTION, EMAIL, PROJECTS, SOCIALS, EDU, SKILLS } from './data'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -27,12 +24,13 @@ export const metadata: Metadata = {
     siteName: NAME,
     title: `${NAME} — Developer & Maker`,
     description: DESCRIPTION,
-    images: [{ url: '/og.png', width: 1200, height: 630, alt: NAME }],
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: `${NAME} — Developer & Maker, India`, type: 'image/png' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: `${NAME} — Developer & Maker`,
     description: DESCRIPTION,
+    site: '@Soumodityax',
     creator: '@Soumodityax',
     images: ['/og.png'],
   },
@@ -59,13 +57,13 @@ const jsonLd = {
       description: DESCRIPTION,
       nationality: { '@type': 'Country', name: 'India' },
       address: { '@type': 'PostalAddress', addressCountry: 'IN' },
-      email: 'soumodityapramanik@gmail.com',
-      alumniOf: [
-        { '@type': 'CollegeOrUniversity', name: 'Brainware University' },
-        { '@type': 'HighSchool', name: 'Rampurhat Jitendralal Vidyabhaban' },
-      ],
-      knowsAbout: ['JavaScript','TypeScript','React','Next.js','Node.js','Tailwind CSS','Three.js','Web Development','AI Tools'],
-      sameAs: ['https://www.linkedin.com/in/soumodityapramanik','https://github.com/Soumoditya','https://x.com/Soumodityax','https://www.instagram.com/soumodityapramanik','https://youtube.com/@soumodityapramanik'],
+      email: EMAIL,
+      alumniOf: EDU.map(e => ({
+        '@type': e.inst.includes('University') ? 'CollegeOrUniversity' : 'HighSchool',
+        name: e.inst,
+      })),
+      knowsAbout: SKILLS,
+      sameAs: SOCIALS.map(s => s[1]),
     },
     {
       '@type': 'WebSite',
@@ -74,6 +72,36 @@ const jsonLd = {
       description: DESCRIPTION,
       publisher: { '@id': `${SITE_URL}/#person` },
       inLanguage: 'en-IN',
+    },
+    {
+      '@type': 'ProfilePage',
+      '@id': `${SITE_URL}/#profile`,
+      url: SITE_URL,
+      name: `${NAME} — Developer & Maker`,
+      about: { '@id': `${SITE_URL}/#person` },
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      inLanguage: 'en-IN',
+      primaryImageOfPage: `${SITE_URL}/og.png`,
+    },
+    // the nine real projects, so search engines can surface them individually
+    {
+      '@type': 'ItemList',
+      '@id': `${SITE_URL}/#projects`,
+      name: `Projects by ${NAME}`,
+      numberOfItems: PROJECTS.length,
+      itemListElement: PROJECTS.map((p, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        item: {
+          '@type': 'SoftwareApplication',
+          name: p.n,
+          description: p.desc,
+          applicationCategory: p.cat,
+          operatingSystem: p.tags.includes('Android') ? 'Android' : 'Web',
+          author: { '@id': `${SITE_URL}/#person` },
+          ...(p.url ? { url: p.url } : {}),
+        },
+      })),
     },
   ],
 }
@@ -90,7 +118,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="color-scheme" content="dark" />
         <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* real content for crawlers and anyone without JS / WebGL */}
+        <noscript>
+          <div className="noscript-doc">
+            <h1>{NAME} — Developer &amp; Maker, India</h1>
+            <p>{DESCRIPTION}</p>
+            <h2>Projects</h2>
+            <ul>
+              {PROJECTS.map(p => (
+                <li key={p.n}>
+                  {p.url ? <a href={p.url}>{p.n}</a> : <strong>{p.n}</strong>}
+                  {` — ${p.cat}. ${p.desc} (${p.tags.join(', ')})`}
+                </li>
+              ))}
+            </ul>
+            <h2>Education</h2>
+            <ul>{EDU.map(e => <li key={e.inst}>{`${e.yr} — ${e.inst}, ${e.deg}, ${e.place}`}</li>)}</ul>
+            <h2>Skills</h2>
+            <p>{SKILLS.join(', ')}</p>
+            <h2>Contact</h2>
+            <p><a href={`mailto:${EMAIL}`}>{EMAIL}</a></p>
+            <ul>{SOCIALS.map(s => <li key={s[0]}><a href={s[1]}>{s[0]}</a></li>)}</ul>
+          </div>
+        </noscript>
+      </body>
     </html>
   )
 }
