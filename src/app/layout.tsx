@@ -46,25 +46,35 @@ export const metadata: Metadata = {
   },
 }
 
+/* Google's ProfilePage rich result REQUIRES `mainEntity` pointing at the
+   Person (an `about` reference is not accepted — Search Console reports
+   "Missing field 'mainEntity'"). The Person is defined inline inside
+   mainEntity rather than as a bare {"@id"} reference so the required fields
+   are present on the node itself; the @id is kept so publisher/author
+   references elsewhere in the graph still resolve to the same entity. */
+const person = {
+  '@type': 'Person',
+  '@id': `${SITE_URL}/#person`,
+  name: NAME,
+  url: SITE_URL,
+  image: `${SITE_URL}/og.png`,
+  jobTitle: 'Web Developer',
+  description: DESCRIPTION,
+  nationality: { '@type': 'Country', name: 'India' },
+  address: { '@type': 'PostalAddress', addressCountry: 'IN' },
+  email: EMAIL,
+  alumniOf: EDU.map(e => ({
+    '@type': e.inst.includes('University') ? 'CollegeOrUniversity' : 'HighSchool',
+    name: e.inst,
+  })),
+  knowsAbout: SKILLS,
+  sameAs: SOCIALS.map(s => s[1]),
+  mainEntityOfPage: { '@id': `${SITE_URL}/#profile` },
+}
+
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'Person',
-      '@id': `${SITE_URL}/#person`,
-      name: NAME, url: SITE_URL,
-      jobTitle: 'Web Developer',
-      description: DESCRIPTION,
-      nationality: { '@type': 'Country', name: 'India' },
-      address: { '@type': 'PostalAddress', addressCountry: 'IN' },
-      email: EMAIL,
-      alumniOf: EDU.map(e => ({
-        '@type': e.inst.includes('University') ? 'CollegeOrUniversity' : 'HighSchool',
-        name: e.inst,
-      })),
-      knowsAbout: SKILLS,
-      sameAs: SOCIALS.map(s => s[1]),
-    },
     {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
@@ -78,7 +88,7 @@ const jsonLd = {
       '@id': `${SITE_URL}/#profile`,
       url: SITE_URL,
       name: `${NAME} — Developer & Maker`,
-      about: { '@id': `${SITE_URL}/#person` },
+      mainEntity: person,
       isPartOf: { '@id': `${SITE_URL}/#website` },
       inLanguage: 'en-IN',
       primaryImageOfPage: `${SITE_URL}/og.png`,
