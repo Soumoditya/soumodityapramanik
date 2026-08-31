@@ -3,7 +3,7 @@ import Script from 'next/script'
 import './globals.css'
 import { NAME, SITE_URL, DESCRIPTION, EMAIL, PROJECTS, SOCIALS, EDU, SKILLS, slugFor } from './data'
 
-const GA_ID = 'G-9BM2BBQLRJ'
+const GA_ID = 'G-0LZQ6G5L4N'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
