@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
-import { NAME, SITE_URL, DESCRIPTION, EMAIL, PROJECTS, SOCIALS, EDU, SKILLS } from './data'
+import { NAME, SITE_URL, DESCRIPTION, EMAIL, PROJECTS, SOCIALS, EDU, SKILLS, slugFor } from './data'
+
+const GA_ID = 'G-9BM2BBQLRJ'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -104,12 +107,14 @@ const jsonLd = {
         position: i + 1,
         item: {
           '@type': 'SoftwareApplication',
+          '@id': `${SITE_URL}/projects/${slugFor(p)}/#app`,
           name: p.n,
+          url: `${SITE_URL}/projects/${slugFor(p)}/`,
           description: p.desc,
           applicationCategory: p.cat,
           operatingSystem: p.tags.includes('Android') ? 'Android' : 'Web',
           author: { '@id': `${SITE_URL}/#person` },
-          ...(p.url ? { url: p.url } : {}),
+          ...(p.url ? { sameAs: p.url } : {}),
         },
       })),
     },
@@ -129,6 +134,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" />
       </head>
       <body>
+        {/* Google Analytics 4 */}
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+        <Script id="ga4" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${GA_ID}');
+        `}</Script>
         {children}
         {/* real content for crawlers and anyone without JS / WebGL */}
         <noscript>
@@ -136,11 +149,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <h1>{NAME} — Developer &amp; Maker, India</h1>
             <p>{DESCRIPTION}</p>
             <h2>Projects</h2>
+            <p><a href="/projects/">All projects &rarr;</a></p>
             <ul>
               {PROJECTS.map(p => (
                 <li key={p.n}>
-                  {p.url ? <a href={p.url}>{p.n}</a> : <strong>{p.n}</strong>}
+                  <a href={`/projects/${slugFor(p)}/`}>{p.n}</a>
                   {` — ${p.cat}. ${p.desc} (${p.tags.join(', ')})`}
+                  {p.url ? <> · <a href={p.url}>Live</a></> : null}
                 </li>
               ))}
             </ul>

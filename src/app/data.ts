@@ -39,3 +39,11 @@ export const EDU = [
 ]
 
 export const SKILLS = ['JavaScript','TypeScript','React','Next.js','Node.js','Tailwind CSS','Three.js','Android','Web Development','AI Tools']
+
+/* Slugs for the per-project detail pages (/projects/<slug>/). Derived from the
+   name so the project list stays the single source of truth. */
+export const slugify = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+export const slugFor = (p: Project) => slugify(p.n)
+export const getProjectBySlug = (slug: string) =>
+  PROJECTS.find(p => slugFor(p) === slug)
